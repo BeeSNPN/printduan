@@ -331,5 +331,49 @@ function confirmPay() {
   }, 1500);
 }
 </script>
+
+<script>
+// Auto switch tab based on URL param
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page');
+  const ref = params.get('ref');
+  const session = params.get('session');
+  const amount = params.get('amount');
+  const method = params.get('method');
+
+  if (page === 'upload') {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('uploadPage').classList.add('active');
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    if (session) document.getElementById('uploadSession').textContent = '#' + session;
+  } else if (page === 'pay') {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('payPage').classList.add('active');
+    document.querySelectorAll('.tab')[2].classList.add('active');
+    if (amount) {
+      const fmt = parseInt(amount).toLocaleString() + ' ກີບ';
+      document.querySelector('.amount-card .amount').textContent = fmt;
+      document.querySelector('.big-btn').textContent = '✅ ຢືນຢັນຈ່າຍ ' + fmt;
+      document.querySelector('.info-row:last-child span:last-child').textContent = fmt;
+      document.getElementById('payPage').querySelector('.ref').textContent = 'ລະຫັດ: #' + (ref||'') + ' · ວຽງຈັນ ສາຂາ 1';
+    }
+    if (method === 'bcel') {
+      document.querySelectorAll('.pay-method-btn')[0].classList.add('selected');
+      document.querySelectorAll('.pay-method-btn')[1].classList.remove('selected');
+    } else if (method === 'onepay') {
+      document.querySelectorAll('.pay-method-btn')[1].classList.add('selected');
+      document.querySelectorAll('.pay-method-btn')[0].classList.remove('selected');
+    }
+  } else {
+    // login page - update session ref
+    if (ref) {
+      document.getElementById('sessionRef').textContent = ref;
+    }
+  }
+});
+</script>
 </body>
 </html>

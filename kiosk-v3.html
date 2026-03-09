@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ພິມດ່ວນ Kiosk v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --primary:#FF6B00; --primary-light:#FF8C3A; --primary-pale:#FFF3E8;
+  --accent:#FFD700; --dark:#1A1A2E; --text:#1A1A2E; --muted:#888;
+  --bg:#F7F8FC; --radius:18px; --shadow:0 4px 24px rgba(255,107,0,0.10);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans Lao','Noto Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* LOGIN */
+.login-screen{background:linear-gradient(160deg,var(--dark) 0%,#16213E 50%,#0F3460 100%);align-items:center;justify-content:center;padding:30px 24px;}
+.login-logo{font-size:64px;margin-bottom:16px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.login-title{color:white;font-size:24px;font-weight:700;margin-bottom:6px;text-align:center;}
+.login-sub{color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:36px;text-align:center;}
+.login-box{background:white;border-radius:24px;padding:28px 24px;width:100%;max-width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.login-box h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+.login-box p{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.qr-box{margin:0 auto 12px;display:flex;align-items:center;justify-content:center;}
+.qr-hint{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.qr-hint span{color:var(--primary);cursor:pointer;font-weight:600;}
+.timer-txt{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.timer-txt strong{color:var(--primary);}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e0e0e0;}
+.divider span{font-size:11px;color:var(--muted);}
+.pin-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+.pin-dot{width:44px;height:44px;border-radius:12px;border:2px solid #e0e0e0;font-size:20px;text-align:center;font-family:inherit;transition:border-color 0.2s;}
+.pin-dot:focus{outline:none;border-color:var(--primary);}
+.primary-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border:none;border-radius:14px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+
+/* TOPBAR */
+.topbar{background:var(--dark);color:white;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.store-icon{width:38px;height:38px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.store-name{font-size:15px;font-weight:600;}
+.store-sub{font-size:11px;color:#aaa;}
+.topbar-right{display:flex;gap:12px;align-items:center;}
+.topbar-btn{background:none;border:none;color:white;font-family:inherit;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0.85;}
+.topbar-btn span{font-size:20px;}
+.topbar-btn:hover{opacity:1;color:var(--primary-light);}
+
+.banner{background:linear-gradient(135deg,var(--primary) 0%,#FF8C3A 60%,var(--accent) 100%);padding:20px;color:white;position:relative;overflow:hidden;}
+.banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,0.1);border-radius:50%;}
+.banner h2{font-size:17px;font-weight:700;margin-bottom:4px;}
+.banner p{font-size:13px;opacity:0.85;}
+
+.quick-actions{background:white;padding:16px 20px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #f0f0f0;}
+.quick-actions::-webkit-scrollbar{display:none;}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;cursor:pointer;transition:transform 0.15s;}
+.qa-item:active{transform:scale(0.93);}
+.qa-icon{width:52px;height:52px;background:var(--primary-pale);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.qa-label{font-size:11px;color:var(--muted);text-align:center;line-height:1.3;}
+
+.section{padding:20px 16px 8px;}
+.section-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.section-title::before{content:'';width:4px;height:18px;background:var(--primary);border-radius:4px;display:block;}
+
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 16px;}
+.feature-card{background:white;border-radius:var(--radius);padding:18px 16px;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.18s;position:relative;overflow:hidden;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;}
+.feature-card:active{transform:scale(0.96);}
+.feature-card h3{font-size:15px;font-weight:700;line-height:1.3;}
+.feature-card p{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;}
+.feature-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;align-self:flex-end;margin-top:8px;}
+.icon-orange{background:linear-gradient(135deg,#FF6B00,#FF8C3A);}
+.icon-purple{background:linear-gradient(135deg,#7B2FBE,#A855F7);}
+.icon-blue{background:linear-gradient(135deg,#0EA5E9,#38BDF8);}
+.icon-green{background:linear-gradient(135deg,#10B981,#34D399);}
+.icon-pink{background:linear-gradient(135deg,#EC4899,#F472B6);}
+.icon-teal{background:linear-gradient(135deg,#0D9488,#2DD4BF);}
+.price-badge{position:absolute;top:12px;right:12px;background:var(--primary-pale);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;}
+
+.promo{margin:0 16px 16px;background:linear-gradient(135deg,var(--dark),#16213E);border-radius:var(--radius);padding:16px 18px;color:white;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.promo-text h4{font-size:14px;font-weight:700;}
+.promo-text p{font-size:12px;opacity:0.7;margin-top:2px;}
+.promo-badge{background:var(--accent);color:var(--dark);font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;white-space:nowrap;}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #f0f0f0;display:flex;padding:8px 0;box-shadow:0 -4px 20px rgba(0,0,0,0.06);z-index:50;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;border:none;background:none;font-family:inherit;}
+.nav-icon{font-size:22px;}
+.nav-label{font-size:10px;color:var(--muted);}
+.nav-item.active .nav-label{color:var(--primary);font-weight:600;}
+.nav-dot{width:4px;height:4px;background:var(--primary);border-radius:50%;margin:0 auto;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:flex-end;}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s;}
+.modal{background:white;width:100%;border-radius:24px 24px 0 0;padding:24px 20px 40px;animation:slideUp 0.3s ease;max-height:90vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-handle{width:40px;height:4px;background:#e0e0e0;border-radius:4px;margin:0 auto 20px;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+
+.upload-options{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.upload-opt{display:flex;align-items:center;gap:14px;padding:16px;border:2px solid #e0e0e0;border-radius:16px;cursor:pointer;transition:all 0.15s;background:none;font-family:inherit;width:100%;text-align:left;}
+.upload-opt:hover{border-color:var(--primary);background:var(--primary-pale);}
+.upload-opt-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--primary-pale);flex-shrink:0;}
+.upload-opt h4{font-size:14px;font-weight:600;}
+.upload-opt p{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* QR DISPLAY */
+.qr-display-box{background:white;border:2px solid #f0f0f0;border-radius:20px;padding:24px;text-align:center;margin-bottom:16px;}
+.qr-display-box h4{font-size:15px;font-weight:700;margin-bottom:4px;}
+.qr-display-box p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+.qr-wrap{margin:0 auto 12px;display:flex;align-items:center;justify-content:center;}
+.url-chip{background:var(--bg);border-radius:8px;padding:8px 12px;font-size:10px;color:var(--muted);word-break:break-all;margin-bottom:8px;text-align:left;}
+.url-chip strong{color:var(--primary);}
+
+.steps-box{background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px;}
+.steps-box p{font-size:12px;color:var(--text);line-height:2.2;}
+.steps-box strong{color:var(--primary);}
+
+.option-row{display:flex;gap:8px;margin-bottom:12px;}
+.option-btn{flex:1;padding:10px;border:2px solid #e0e0e0;border-radius:12px;background:none;font-family:inherit;font-size:13px;cursor:pointer;transition:all 0.15s;text-align:center;}
+.option-btn.selected{border-color:var(--primary);background:var(--primary-pale);color:var(--primary);font-weight:600;}
+
+.qty-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 16px;margin-bottom:16px;}
+.qty-label{font-size:14px;font-weight:500;}
+.qty-controls{display:flex;align-items:center;gap:16px;}
+.qty-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--primary);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-num{font-size:16px;font-weight:700;min-width:24px;text-align:center;}
+
+.price-summary{background:var(--primary-pale);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.price-summary .label{font-size:13px;color:var(--muted);}
+.price-summary .amount{font-size:20px;font-weight:700;color:var(--primary);}
+
+.confirm-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border:none;border-radius:16px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;}
+
+/* PAY METHOD */
+.payment-methods{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.pay-option{display:flex;align-items:center;gap:14px;padding:14px 16px;border:2px solid #e0e0e0;border-radius:14px;cursor:pointer;transition:all 0.15s;background:none;font-family:inherit;width:100%;text-align:left;}
+.pay-option:hover{border-color:var(--primary);background:var(--primary-pale);}
+.pay-logo{width:52px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;flex-shrink:0;}
+.bcel{background:linear-gradient(135deg,#0057B7,#0080FF);}
+.onepay{background:linear-gradient(135deg,#00A651,#00CC66);}
+.cash{background:linear-gradient(135deg,#888,#aaa);}
+.pay-info h4{font-size:14px;font-weight:600;}
+.pay-info p{font-size:11px;color:var(--muted);}
+.pay-arrow{margin-left:auto;color:var(--muted);font-size:18px;}
+
+/* PAY QR */
+.pay-amount-big{font-size:32px;font-weight:700;color:var(--primary);text-align:center;margin:8px 0 4px;}
+.pay-ref-txt{font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px;}
+.paid-btn{width:100%;padding:16px;background:linear-gradient(135deg,#10B981,#34D399);color:white;border:none;border-radius:16px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;}
+
+.spacer{height:90px;}
+
+/* TOAST */
+.toast{display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--dark);color:white;padding:12px 24px;border-radius:24px;font-size:13px;z-index:400;white-space:nowrap;}
+.toast.show{display:block;animation:fadeIn 0.2s;}
+
+/* SUCCESS */
+.success-overlay{display:none;position:fixed;inset:0;background:rgba(16,185,129,0.96);z-index:500;flex-direction:column;align-items:center;justify-content:center;color:white;text-align:center;padding:30px;}
+.success-overlay.show{display:flex;animation:fadeIn 0.3s;}
+.success-icon{font-size:80px;margin-bottom:20px;animation:bounce 0.5s;}
+@keyframes bounce{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.success-overlay h2{font-size:24px;font-weight:700;margin-bottom:8px;}
+.success-overlay p{font-size:14px;opacity:0.85;margin-bottom:30px;line-height:1.8;}
+.success-back{padding:16px 40px;background:white;color:#10B981;border:none;border-radius:16px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;}
+
+/* WAITING PULSE */
+.waiting-dot{display:inline-block;width:8px;height:8px;background:var(--primary);border-radius:50%;margin:0 3px;animation:blink 1.2s infinite;}
+.waiting-dot:nth-child(2){animation-delay:0.2s;}
+.waiting-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes blink{0%,100%{opacity:0.2}50%{opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="loginScreen">
+  <div class="login-screen">
+    <div class="login-logo">🖨️</div>
+    <div class="login-title">ພິມດ່ວນ Kiosk</div>
+    <div class="login-sub">ສະແກນ QR ດ້ວຍກ້ອງໂທລະສັບ ຫຼື ໃສ່ PIN</div>
+    <div class="login-box">
+      <h3>📷 ສະແກນດ້ວຍກ້ອງ</h3>
+      <p>ເປີດກ້ອງໂທລະສັບ ສ່ອງໃສ່ QR — ບໍ່ຕ້ອງໂຫລດແອັບ!</p>
+      <div class="qr-box" id="loginQR"></div>
+      <div class="url-chip" id="loginURL"></div>
+      <div class="timer-txt">ໝົດອາຍຸໃນ <strong id="loginTimer">60</strong>s · <span style="color:var(--primary);cursor:pointer;font-weight:600;" onclick="refreshLoginQR()">ໂຫລດໃໝ່</span></div>
+      <div class="divider"><span>ຫຼື ໃສ່ PIN</span></div>
+      <div class="pin-row">
+        <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" oninput="movePIN(this,1)">
+        <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" oninput="movePIN(this,2)">
+        <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" oninput="movePIN(this,3)">
+        <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" oninput="movePIN(this,4)">
+      </div>
+      <button class="primary-btn" onclick="doLogin()">ເຂົ້າໃຊ້ງານ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="mainScreen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="store-icon">🖨️</div>
+      <div>
+        <div class="store-name">ພິມດ່ວນ Kiosk</div>
+        <div class="store-sub">ວຽງຈັນ ສາຂາ 1</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" onclick="showToast('A4 ດຳຂາວ: 500 ກີບ | ສີ: 1,000 ກີບ')"><span>💰</span>ລາຄາ</button>
+      <button class="topbar-btn" onclick="doLogout()"><span>🚪</span>ອອກ</button>
+    </div>
+  </div>
+  <div class="banner">
+    <h2>ຍິນດີຕ້ອນຮັບ 👋</h2>
+    <p>ພິມ · ຖ່າຍເອກະສານ · ລ້າງຮູບ ໄດ້ທັນທີ</p>
+  </div>
+  <div class="quick-actions">
+    <div class="qa-item" onclick="showToast('ຄູ່ມືໃຊ້ງານ')"><div class="qa-icon">📖</div><div class="qa-label">ຄູ່ມື</div></div>
+    <div class="qa-item" onclick="showToast('ຄຳສັ່ງຂອງຂ້ອຍ')"><div class="qa-icon">📋</div><div class="qa-label">ຄຳສັ່ງ</div></div>
+    <div class="qa-item" onclick="openUploadModal()"><div class="qa-icon">📤</div><div class="qa-label">ອັບໂຫລດ</div></div>
+    <div class="qa-item" onclick="showToast('ໂປໂມຊັ່ນ')"><div class="qa-icon">🎁</div><div class="qa-label">ໂປໂມ</div></div>
+  </div>
+  <div style="padding:16px 16px 0;">
+    <div class="promo" onclick="showToast('ພິມ 10 ໜ້າ ແຖມ 2 ໜ້າຟຣີ!')">
+      <div class="promo-text"><h4>🎉 ໂປໂມຊັ່ນ ມື້ນີ້!</h4><p>ພິມ 10 ໜ້າ ແຖມ 2 ໜ້າຟຣີ</p></div>
+      <div class="promo-badge">ເບິ່ງດຽວນີ້</div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">ຟີເຈີ້ຫຼັກ</div></div>
+  <div class="feature-grid">
+    <div class="feature-card" onclick="openPrintModal('doc')">
+      <div class="price-badge">500 ກີບ/ໜ້າ</div>
+      <div><h3>ພິມເອກະສານ</h3><p>PDF, Word, ຮູບພາບ A4/A3</p></div>
+      <div class="feature-icon icon-orange">📄</div>
+    </div>
+    <div class="feature-card" onclick="openPrintModal('id')">
+      <div class="price-badge">3,000 ກີບ</div>
+      <div><h3>ຮູບຕິດໃບ</h3><p>ຂະໜາດ 1, 2, 3 ນີ້ວ</p></div>
+      <div class="feature-icon icon-purple">🪪</div>
+    </div>
+    <div class="feature-card" onclick="openPrintModal('photo')">
+      <div class="price-badge">2,000 ກີບ</div>
+      <div><h3>ລ້າງຮູບ</h3><p>ພິມຮູບທຳລຶກຊີວິດ</p></div>
+      <div class="feature-icon icon-blue">🖼️</div>
+    </div>
+    <div class="feature-card" onclick="openPrintModal('copy')">
+      <div class="price-badge">500 ກີບ/ໜ້າ</div>
+      <div><h3>ຖ່າຍເອກະສານ</h3><p>ບັດ, ໃບຄຳຮ້ອງ</p></div>
+      <div class="feature-icon icon-green">📠</div>
+    </div>
+    <div class="feature-card" onclick="openPrintModal('special')">
+      <div class="price-badge">5,000 ກີບ</div>
+      <div><h3>ພິມພິເສດ</h3><p>Banner, ໂປສເຕີ</p></div>
+      <div class="feature-icon icon-pink">🎨</div>
+    </div>
+    <div class="feature-card" onclick="showToast('ກຳລັງມາ...')">
+      <div><h3>ເພີ່ມເຕີມ</h3><p>ຟີເຈີ້ອື່ນໆ</p></div>
+      <div class="feature-icon icon-teal">🔍</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="bottom-nav">
+    <button class="nav-item active"><span class="nav-icon">🏠</span><span class="nav-label">ໜ້າຫຼັກ</span><div class="nav-dot"></div></button>
+    <button class="nav-item" onclick="showToast('ໂປໂມ')"><span class="nav-icon">🎁</span><span class="nav-label">ໂປໂມ</span></button>
+    <button class="nav-item" onclick="showToast('ຄຳສັ່ງ')"><span class="nav-icon">📋</span><span class="nav-label">ຄຳສັ່ງ</span></button>
+    <button class="nav-item" onclick="showToast('ບັນຊີ')"><span class="nav-icon">😊</span><span class="nav-label">ຂ້ອຍ</span></button>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="uploadModal" onclick="closeOut(event,'uploadModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📤 ອັບໂຫລດໄຟລ໌</div>
+    <div class="modal-sub">ເລືອກວິທີສົ່ງໄຟລ໌ມາພິມ</div>
+    <div class="upload-options">
+      <button class="upload-opt" onclick="openMobileUploadQR()">
+        <div class="upload-opt-icon">📷</div>
+        <div><h4>ສະແກນ QR ດ້ວຍກ້ອງ</h4><p>ສົ່ງໄຟລ໌ຈາກໂທລະສັບ — ບໍ່ຕ້ອງໂຫລດແອັບ</p></div>
+      </button>
+      <button class="upload-opt" onclick="showToast('ເສຍບ USB ທີ່ຊ່ອງດ້ານຂ້າງ')">
+        <div class="upload-opt-icon">💾</div>
+        <div><h4>USB Drive</h4><p>ເສຍບ USB ທີ່ຊ່ອງດ້ານຂ້າງ kiosk</p></div>
+      </button>
+      <button class="upload-opt" onclick="showToast('ວາງເອກະສານໃສ່ Scanner')">
+        <div class="upload-opt-icon">📠</div>
+        <div><h4>Scanner ໂດຍກົງ</h4><p>ວາງເອກະສານໃສ່ Scanner</p></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE UPLOAD QR MODAL -->
+<div class="modal-overlay" id="mobileQRModal" onclick="closeOut(event,'mobileQRModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="qr-display-box">
+      <h4>📷 ສະແກນດ້ວຍກ້ອງໂທລະສັບ</h4>
+      <p>ເປີດກ້ອງ → ສ່ອງໃສ່ QR → browser ເປີດຂຶ້ນ<br>ເລືອກໄຟລ໌ → ກົດສົ່ງ ✅</p>
+      <div class="qr-wrap" id="uploadQR"></div>
+      <div class="url-chip" id="uploadURL"></div>
+      <div class="timer-txt">ລິ້ງໝົດອາຍຸໃນ <strong id="uploadTimer">120</strong>s</div>
+    </div>
+    <div class="steps-box">
+      <p><strong>1.</strong> ເປີດກ້ອງໂທລະສັບ (ບໍ່ຕ້ອງໂຫລດແອັບ)</p>
+      <p><strong>2.</strong> ສ່ອງໃສ່ QR Code ດ້ານເທິງ</p>
+      <p><strong>3.</strong> Browser ຈະເປີດໜ້າອັບໂຫລດ</p>
+      <p><strong>4.</strong> ເລືອກໄຟລ໌ → ກົດ "ສົ່ງ"</p>
+    </div>
+    <div style="text-align:center;margin-bottom:16px;color:var(--muted);font-size:13px;">
+      ລໍຖ້າໄຟລ໌ <span class="waiting-dot"></span><span class="waiting-dot"></span><span class="waiting-dot"></span>
+    </div>
+    <button class="confirm-btn" onclick="simulateReceived()">✅ ຮັບໄຟລ໌ສຳເລັດ (ທົດສອບ)</button>
+  </div>
+</div>
+
+<!-- PRINT OPTIONS MODAL -->
+<div class="modal-overlay" id="printModal" onclick="closeOut(event,'printModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">ພິມເອກະສານ</div>
+    <div class="modal-sub" id="modalSub">ເລືອກຕົວເລືອກ</div>
+    <div class="option-row" id="sizeOptions">
+      <button class="option-btn selected" onclick="selOpt(this,'sizeOptions')">A4</button>
+      <button class="option-btn" onclick="selOpt(this,'sizeOptions')">A3</button>
+      <button class="option-btn" onclick="selOpt(this,'sizeOptions')">4×6</button>
+    </div>
+    <div class="option-row" id="colorOptions">
+      <button class="option-btn selected" onclick="selOpt(this,'colorOptions');updatePrice()">⬛ ດຳ-ຂາວ</button>
+      <button class="option-btn" onclick="selOpt(this,'colorOptions');updatePrice()">🎨 ສີ</button>
+    </div>
+    <div class="qty-row">
+      <span class="qty-label">ຈຳນວນສຳເນົາ</span>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-num" id="qtyNum">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+    <div class="price-summary">
+      <span class="label">ລາຄາທັງໝົດ</span>
+      <span class="amount" id="totalPrice">500 ກີບ</span>
+    </div>
+    <button class="confirm-btn" onclick="openPayChoice()">ດຳເນີນການຊຳລະ →</button>
+  </div>
+</div>
+
+<!-- PAY CHOICE -->
+<div class="modal-overlay" id="payChoiceModal" onclick="closeOut(event,'payChoiceModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">ເລືອກວິທີຊຳລະ</div>
+    <div class="modal-sub">ສະແກນ QR ດ້ວຍກ້ອງໂທລະສັບໄດ້ເລີຍ</div>
+    <div class="payment-methods">
+      <button class="pay-option" onclick="openPayQR('bcel')">
+        <div class="pay-logo bcel">BCEL</div>
+        <div class="pay-info"><h4>BCEL One</h4><p>ສະແກນ QR → browser ເປີດໜ້າຈ່າຍ</p></div>
+        <div class="pay-arrow">›</div>
+      </button>
+      <button class="pay-option" onclick="openPayQR('onepay')">
+        <div class="pay-logo onepay">ONE</div>
+        <div class="pay-info"><h4>OnePay</h4><p>ສະແກນ QR → browser ເປີດໜ້າຈ່າຍ</p></div>
+        <div class="pay-arrow">›</div>
+      </button>
+      <button class="pay-option" onclick="confirmCash()">
+        <div class="pay-logo cash">💵</div>
+        <div class="pay-info"><h4>ເງິນສົດ</h4><p>ຈ່າຍທີ່ Kiosk ໂດຍກົງ</p></div>
+        <div class="pay-arrow">›</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PAY QR MODAL -->
+<div class="modal-overlay" id="payQRModal" onclick="closeOut(event,'payQRModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="payQRTitle">ຊຳລະຜ່ານ BCEL One</div>
+    <div class="modal-sub" id="payQRSub">ສະແກນ QR ດ້ວຍກ້ອງໂທລະສັບ — browser ເປີດຂຶ້ນທັນທີ</div>
+    <div class="pay-amount-big" id="payAmtBig">500 ກີບ</div>
+    <div class="pay-ref-txt" id="payRef">ລະຫັດ: #PD-000001</div>
+    <div class="qr-display-box">
+      <div class="qr-wrap" id="payQR"></div>
+      <div class="url-chip" id="payURL"></div>
+      <div class="timer-txt">QR ໝົດອາຍຸໃນ <strong id="payTimer">300</strong>s</div>
+    </div>
+    <div class="steps-box" id="paySteps"></div>
+    <div style="text-align:center;margin-bottom:16px;color:var(--muted);font-size:13px;">
+      ລໍຖ້າການຢືນຢັນ <span class="waiting-dot"></span><span class="waiting-dot"></span><span class="waiting-dot"></span>
+    </div>
+    <button class="paid-btn" onclick="confirmPaid()">✅ ຊຳລະສຳເລັດແລ້ວ</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">✅</div>
+  <h2>ຊຳລະສຳເລັດ!</h2>
+  <p>ກຳລັງສົ່ງໄປພິມ...<br>ກະລຸນາລໍຖ້າ ແລ້ວຮັບເອກະສານ<br>ທີ່ຊ່ອງ Printer</p>
+  <button class="success-back" onclick="closeSuccess()">ກັບໜ້າຫຼັກ</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// STATE
+let qty=1, basePrice=500, currentType='doc';
+let loginInt, uploadInt, payInt;
+const BASE = 'https://printduan.la';
+const prices={doc:500,id:3000,photo:2000,copy:500,special:5000};
+const titles={
+  doc:['ພິມເອກະສານ','ເລືອກຕົວເລືອກການພິມ'],
+  id:['ຮູບຕິດໃບ','ເລືອກຂະໜາດ'],
+  photo:['ລ້າງຮູບ','ເລືອກຂະໜາດຮູບ'],
+  copy:['ຖ່າຍເອກະສານ','ວາງເອກະສານໃສ່ Scanner'],
+  special:['ພິມພິເສດ','Banner, ໂປສເຕີ'],
+};
+
+function genRef(){return 'PD'+String(Math.floor(Math.random()*999999)).padStart(6,'0');}
+function fmtURL(url){return url.length>50?url.slice(0,50)+'...':url;}
+
+function makeQR(id,url,size=170){
+  const el=document.getElementById(id);
+  el.innerHTML='';
+  new QRCode(el,{text:url,width:size,height:size,correctLevel:QRCode.CorrectLevel.M});
+}
+
+function startTimer(elId,seconds,onEnd){
+  let t=seconds;
+  document.getElementById(elId).textContent=t;
+  return setInterval(()=>{
+    t--;
+    document.getElementById(elId).textContent=t;
+    if(t<=0){clearInterval(arguments.callee);if(onEnd)onEnd();}
+  },1000);
+}
+
+// LOGIN
+function refreshLoginQR(){
+  clearInterval(loginInt);
+  const ref=genRef();
+  const url=`${BASE}/login?ref=${ref}&kiosk=vte01`;
+  makeQR('loginQR',url,150);
+  document.getElementById('loginURL').innerHTML=`<strong>URL:</strong> ${fmtURL(url)}`;
+  loginInt=startTimer('loginTimer',60,refreshLoginQR);
+}
+
+function movePIN(el,idx){
+  if(el.value.length===1&&idx<4) document.querySelectorAll('.pin-dot')[idx].focus();
+}
+
+function doLogin(){
+  clearInterval(loginInt);
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('mainScreen').classList.add('active');
+  showToast('ຍິນດີຕ້ອນຮັບ! 👋');
+}
+
+function doLogout(){
+  document.getElementById('mainScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+  refreshLoginQR();
+}
+
+// UPLOAD
+function openUploadModal(){document.getElementById('uploadModal').classList.add('open');}
+
+function openMobileUploadQR(){
+  document.getElementById('uploadModal').classList.remove('open');
+  setTimeout(()=>{
+    const ref=genRef();
+    const url=`${BASE}/upload?session=${ref}`;
+    document.getElementById('mobileQRModal').classList.add('open');
+    makeQR('uploadQR',url,180);
+    document.getElementById('uploadURL').innerHTML=`<strong>URL:</strong> ${fmtURL(url)}`;
+    clearInterval(uploadInt);
+    uploadInt=startTimer('uploadTimer',120,()=>{
+      document.getElementById('uploadTimer').textContent='ໝົດອາຍຸ';
+    });
+  },200);
+}
+
+function simulateReceived(){
+  clearInterval(uploadInt);
+  document.getElementById('mobileQRModal').classList.remove('open');
+  showToast('✅ ຮັບໄຟລ໌ສຳເລັດ!');
+  setTimeout(()=>openPrintModal('doc'),600);
+}
+
+// PRINT
+function openPrintModal(type){
+  currentType=type; qty=1; basePrice=prices[type];
+  document.getElementById('modalTitle').textContent=titles[type][0];
+  document.getElementById('modalSub').textContent=titles[type][1];
+  document.getElementById('qtyNum').textContent=1;
+  updatePrice();
+  document.getElementById('printModal').classList.add('open');
+}
+
+function selOpt(btn,gid){
+  document.querySelectorAll(`#${gid} .option-btn`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function changeQty(d){
+  qty=Math.max(1,qty+d);
+  document.getElementById('qtyNum').textContent=qty;
+  updatePrice();
+}
+
+function getTotal(){
+  const c=document.querySelector('#colorOptions .option-btn.selected');
+  return basePrice*qty*(c&&c.textContent.includes('ສີ')?2:1);
+}
+
+function updatePrice(){
+  document.getElementById('totalPrice').textContent=getTotal().toLocaleString()+' ກີບ';
+}
+
+function openPayChoice(){
+  document.getElementById('printModal').classList.remove('open');
+  setTimeout(()=>document.getElementById('payChoiceModal').classList.add('open'),200);
+}
+
+// PAYMENT QR
+function openPayQR(method){
+  document.getElementById('payChoiceModal').classList.remove('open');
+  setTimeout(()=>{
+    const ref=genRef();
+    const amt=getTotal();
+    const amtFmt=amt.toLocaleString()+' ກີບ';
+    document.getElementById('payAmtBig').textContent=amtFmt;
+    document.getElementById('payRef').textContent=`ລະຫັດ: #${ref}`;
+
+    let url,title,steps;
+    if(method==='bcel'){
+      url=`${BASE}/pay/bcel?ref=${ref}&amount=${amt}&merchant=PrintDuan`;
+      title='ຊຳລະຜ່ານ BCEL One';
+      steps=`<p><strong>1.</strong> ເປີດກ້ອງໂທລະສັບ</p>
+             <p><strong>2.</strong> ສ່ອງໃສ່ QR Code</p>
+             <p><strong>3.</strong> Browser ເປີດໜ້າ BCEL One</p>
+             <p><strong>4.</strong> ຢືນຢັນຈ່າຍ ${amtFmt}</p>`;
+    } else {
+      url=`${BASE}/pay/onepay?ref=${ref}&amount=${amt}&merchant=PrintDuan`;
+      title='ຊຳລະຜ່ານ OnePay';
+      steps=`<p><strong>1.</strong> ເປີດກ້ອງໂທລະສັບ</p>
+             <p><strong>2.</strong> ສ່ອງໃສ່ QR Code</p>
+             <p><strong>3.</strong> Browser ເປີດໜ້າ OnePay</p>
+             <p><strong>4.</strong> ຢືນຢັນຈ່າຍ ${amtFmt}</p>`;
+    }
+
+    document.getElementById('payQRTitle').textContent=title;
+    document.getElementById('payQRSub').textContent='ສະແກນ QR ດ້ວຍກ້ອງໂທລະສັບ — browser ເປີດຂຶ້ນທັນທີ';
+    document.getElementById('paySteps').innerHTML=steps;
+    document.getElementById('payURL').innerHTML=`<strong>URL:</strong> ${fmtURL(url)}`;
+    makeQR('payQR',url,180);
+
+    document.getElementById('payQRModal').classList.add('open');
+    clearInterval(payInt);
+    payInt=startTimer('payTimer',300,()=>{openPayQR(method);});
+  },200);
+}
+
+function confirmCash(){
+  document.getElementById('payChoiceModal').classList.remove('open');
+  showSuccess();
+}
+
+function confirmPaid(){
+  clearInterval(payInt);
+  document.getElementById('payQRModal').classList.remove('open');
+  showSuccess();
+}
+
+function showSuccess(){document.getElementById('successOverlay').classList.add('show');}
+function closeSuccess(){document.getElementById('successOverlay').classList.remove('show');}
+
+function closeOut(e,id){
+  if(e.target.classList.contains('modal-overlay')) document.getElementById(id).classList.remove('open');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// INIT
+window.onload=()=>refreshLoginQR();
+</script>
+</body>
+</html>

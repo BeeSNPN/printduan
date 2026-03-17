@@ -38,9 +38,8 @@ db.defaults({
 // FOLDERS SETUP
 // ============================================
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const PUBLIC_DIR = fs.existsSync(path.join(__dirname, "public")) ? path.join(__dirname, "public") : __dirname;
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
-if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR);
 
 // ============================================
 // MIDDLEWARE

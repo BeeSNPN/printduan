@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintDuan Kiosk</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Noto+Sans+Lao:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --navy: #0A0F1E;
+  --navy2: #111827;
+  --lime: #C8FF00;
+  --lime2: #B0E600;
+  --white: #F5F5F0;
+  --gray: #8892A4;
+  --gray2: #1E2535;
+  --green: #00FF88;
+  --red: #FF3B3B;
+  --radius: 4px;
+  --radius-lg: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans Lao','Syne',sans-serif; background:var(--navy); color:var(--white); min-height:100vh; overflow:hidden; cursor:none; }
+
+/* CURSOR */
+.cursor { width:12px; height:12px; background:var(--lime); border-radius:50%; position:fixed; pointer-events:none; z-index:9999; mix-blend-mode:difference; transition:transform 0.1s; }
+
+/* GRID BG */
+.grid-bg { position:fixed; inset:0; background-image:linear-gradient(rgba(200,255,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(200,255,0,0.03) 1px,transparent 1px); background-size:48px 48px; pointer-events:none; }
+
+/* SCREENS */
+.screen { display:none; min-height:100vh; flex-direction:column; }
+.screen.active { display:flex; }
+
+/* ── CONNECTION STATUS BAR ── */
+.conn-bar { position:fixed; top:0; left:0; right:0; height:3px; background:var(--red); z-index:1000; transition:background 0.3s; }
+.conn-bar.connected { background:var(--green); }
+.conn-bar.connecting { background:orange; animation:blink 1s infinite; }
+
+/* ── TOPBAR ── */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:24px 40px 20px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.brand { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; letter-spacing:-1px; }
+.brand span { color:var(--lime); }
+.topbar-right { display:flex; align-items:center; gap:16px; }
+.conn-pill { display:flex; align-items:center; gap:6px; background:var(--gray2); padding:6px 12px; border-radius:20px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1px; }
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--red); }
+.conn-dot.on { background:var(--green); animation:pulse 2s infinite; }
+.conn-dot.wait { background:orange; animation:blink 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.clock { font-family:'DM Mono',monospace; font-size:13px; color:var(--lime); letter-spacing:1px; }
+.icon-btn { background:var(--gray2); border:1px solid rgba(255,255,255,0.08); color:var(--gray); padding:8px 14px; border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:10px; cursor:pointer; letter-spacing:1px; transition:all 0.15s; }
+.icon-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.2); }
+
+/* ── BUTTONS ── */
+.btn-lime { width:100%; padding:16px; background:var(--lime); color:var(--navy); border:none; border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:14px; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; margin-bottom:10px; }
+.btn-lime:hover { background:var(--lime2); }
+.btn-lime:active { transform:scale(0.98); }
+.btn-lime:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-ghost { width:100%; padding:14px; background:transparent; color:var(--gray); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+.btn-ghost:hover { border-color:var(--lime); color:var(--lime); }
+
+/* ─────────────── SPLASH/LOGIN SCREEN ─────────────── */
+#splash { align-items:center; justify-content:center; position:relative; }
+.splash-inner { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:0; }
+.brand-hero { font-family:'Syne',sans-serif; font-size:80px; font-weight:800; letter-spacing:-5px; line-height:1; margin-bottom:4px; }
+.brand-hero span { color:var(--lime); }
+.brand-tagline { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:6px; color:var(--gray); text-transform:uppercase; margin-bottom:48px; }
+
+.login-card { background:var(--gray2); border:1px solid rgba(200,255,0,0.12); border-radius:var(--radius-lg); padding:36px 32px; width:360px; position:relative; }
+.login-card-tag { position:absolute; top:-11px; left:20px; background:var(--lime); color:var(--navy); font-family:'DM Mono',monospace; font-size:9px; font-weight:500; padding:2px 10px; border-radius:2px; letter-spacing:2px; }
+
+/* QR Area */
+.qr-wrap { background:white; border-radius:8px; padding:14px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:168px; position:relative; }
+.qr-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:white; border-radius:8px; }
+.spinner { width:28px; height:28px; border:2px solid rgba(10,15,30,0.15); border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.qr-url-txt { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); text-align:center; margin-bottom:12px; word-break:break-all; line-height:1.5; }
+
+/* Session status */
+.session-status { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; background:rgba(200,255,0,0.06); border-radius:var(--radius); margin-bottom:16px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--gray); }
+.session-status.scanned { background:rgba(0,255,136,0.08); color:var(--green); }
+.session-status.scanned .s-dot { background:var(--green); animation:pulse 1s infinite; }
+.s-dot { width:6px; height:6px; border-radius:50%; background:var(--gray); flex-shrink:0; }
+
+.divider { display:flex; align-items:center; gap:12px; margin:16px 0; }
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.08); }
+.divider span { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); letter-spacing:2px; }
+
+/* PIN */
+.pin-row { display:flex; gap:8px; margin-bottom:16px; justify-content:center; }
+.pin-box { width:56px; height:56px; background:var(--navy); border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius); color:var(--lime); font-size:26px; font-family:'DM Mono',monospace; text-align:center; transition:border-color 0.2s; }
+.pin-box:focus { outline:none; border-color:var(--lime); }
+.pin-error { font-family:'DM Mono',monospace; font-size:10px; color:var(--red); text-align:center; margin-bottom:10px; letter-spacing:1px; display:none; }
+
+/* ─────────────── MAIN SCREEN ─────────────── */
+#main { }
+.main-body { flex:1; padding:32px 40px; overflow:hidden; }
+.hero { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:32px; }
+.hero-title { font-family:'Syne',sans-serif; font-size:52px; font-weight:800; letter-spacing:-2px; line-height:1.05; }
+.hero-title span { color:var(--lime); }
+.hero-meta p { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:1px; text-align:right; }
+.hero-meta .date { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:1px; margin-bottom:4px; }
+
+/* Upload strip */
+.upload-strip { display:flex; align-items:center; justify-content:space-between; background:var(--gray2); border:1px dashed rgba(200,255,0,0.2); border-radius:var(--radius-lg); padding:20px 28px; margin-bottom:24px; cursor:pointer; transition:all 0.2s; }
+.upload-strip:hover { border-color:var(--lime); background:rgba(200,255,0,0.03); }
+.upload-strip-left { display:flex; align-items:center; gap:16px; }
+.us-icon { width:44px; height:44px; background:rgba(200,255,0,0.08); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:20px; }
+.us-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:2px; }
+.us-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; }
+.us-cta { font-family:'DM Mono',monospace; font-size:11px; color:var(--lime); letter-spacing:2px; }
+
+/* Service grid */
+.sec-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:4px; color:var(--gray); text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+.sec-label::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.05); }
+.svc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.svc-card { background:var(--gray2); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-lg); padding:24px 20px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; min-height:160px; display:flex; flex-direction:column; justify-content:space-between; }
+.svc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:transparent; transition:background 0.2s; }
+.svc-card:hover { border-color:rgba(200,255,0,0.25); transform:translateY(-2px); }
+.svc-card:hover::before { background:var(--lime); }
+.svc-card:active { transform:scale(0.98); }
+.svc-icon { font-size:28px; margin-bottom:10px; }
+.svc-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:2px; line-height:1.2; }
+.svc-desc { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); letter-spacing:1px; }
+.svc-price { font-family:'DM Mono',monospace; font-size:10px; color:var(--lime); background:rgba(200,255,0,0.08); padding:3px 8px; border-radius:2px; display:inline-block; margin-top:8px; }
+
+/* Promo bar */
+.promo { display:flex; align-items:center; background:rgba(200,255,0,0.04); border:1px solid rgba(200,255,0,0.12); border-radius:var(--radius-lg); padding:14px 24px; cursor:pointer; }
+.promo-tag { background:var(--lime); color:var(--navy); font-family:'DM Mono',monospace; font-size:9px; font-weight:600; padding:3px 8px; border-radius:2px; letter-spacing:2px; margin-right:16px; }
+.promo-txt { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; flex:1; }
+.promo-arr { color:var(--lime); font-size:18px; }
+
+/* ─────────────── MODAL / SHEET ─────────────── */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); z-index:200; align-items:flex-end; }
+.overlay.open { display:flex; animation:fadeIn 0.2s; }
+.sheet { background:var(--navy2); border:1px solid rgba(255,255,255,0.07); border-bottom:none; border-radius:20px 20px 0 0; padding:28px 32px 48px; width:100%; max-height:88vh; overflow-y:auto; animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle { width:36px; height:3px; background:rgba(255,255,255,0.12); border-radius:3px; margin:0 auto 24px; }
+.sheet-title { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; }
+.sheet-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:2px; margin-bottom:24px; text-transform:uppercase; }
+
+/* Options */
+.opt-row { display:flex; gap:8px; margin-bottom:10px; }
+.opt-btn { flex:1; padding:12px 8px; background:var(--gray2); border:1px solid rgba(255,255,255,0.07); border-radius:var(--radius); color:var(--white); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; text-align:center; transition:all 0.15s; letter-spacing:1px; }
+.opt-btn.sel { background:rgba(200,255,0,0.1); border-color:var(--lime); color:var(--lime); }
+
+/* Qty */
+.qty-row { display:flex; align-items:center; justify-content:space-between; background:var(--gray2); border-radius:var(--radius); padding:14px 18px; margin-bottom:10px; }
+.qty-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:2px; text-transform:uppercase; }
+.qty-ctrl { display:flex; align-items:center; gap:20px; }
+.qty-num { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; min-width:32px; text-align:center; }
+.qty-step { width:38px; height:38px; background:var(--navy); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); color:var(--white); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.qty-step:hover { border-color:var(--lime); color:var(--lime); }
+
+/* Total */
+.total-bar { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; background:rgba(200,255,0,0.05); border:1px solid rgba(200,255,0,0.15); border-radius:var(--radius); margin-bottom:16px; }
+.total-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; }
+.total-amt { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--lime); letter-spacing:-1px; }
+
+/* Payment cards */
+.pay-list { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.pay-card { display:flex; align-items:center; gap:16px; padding:16px 18px; background:var(--gray2); border:1.5px solid rgba(255,255,255,0.07); border-radius:var(--radius); cursor:pointer; transition:all 0.15s; width:100%; text-align:left; }
+.pay-card:hover { border-color:rgba(200,255,0,0.25); }
+.pay-card.sel { border-color:var(--lime); background:rgba(200,255,0,0.05); }
+.pay-logo { width:58px; height:34px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; font-weight:600; color:white; flex-shrink:0; }
+.bcel { background:linear-gradient(135deg,#0057B7,#0080FF); }
+.onepay { background:linear-gradient(135deg,#00A651,#00CC66); }
+.cash { background:var(--gray2); border:1px solid rgba(255,255,255,0.15); }
+.pay-info h4 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:2px; color:var(--white); }
+.pay-info p { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; }
+.pay-check { margin-left:auto; color:var(--lime); font-size:18px; opacity:0; }
+.pay-card.sel .pay-check { opacity:1; }
+
+/* QR Display in sheet */
+.qr-sheet-wrap { background:var(--gray2); border:1px solid rgba(255,255,255,0.07); border-radius:var(--radius-lg); padding:24px; text-align:center; margin-bottom:16px; }
+.qr-sheet-wrap h4 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px; }
+.qr-sheet-wrap p { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; margin-bottom:16px; }
+.qr-inner { background:white; padding:12px; border-radius:8px; display:inline-block; margin-bottom:12px; }
+.qr-status-txt { font-family:'DM Mono',monospace; font-size:10px; color:var(--lime); letter-spacing:2px; text-transform:uppercase; }
+.waiting-dots span { display:inline-block; width:6px; height:6px; background:var(--lime); border-radius:50%; margin:0 2px; animation:blink 1.2s infinite; }
+.waiting-dots span:nth-child(2){animation-delay:0.2s}
+.waiting-dots span:nth-child(3){animation-delay:0.4s}
+.payment-confirmed { background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.2); border-radius:var(--radius); padding:14px; text-align:center; margin-bottom:16px; display:none; }
+.payment-confirmed .pc-icon { font-size:32px; margin-bottom:8px; }
+.payment-confirmed h4 { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; color:var(--green); }
+
+/* ─────────────── SUCCESS OVERLAY ─────────────── */
+.success-overlay { display:none; position:fixed; inset:0; background:var(--navy); z-index:500; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; }
+.success-overlay.show { display:flex; animation:fadeIn 0.3s; }
+.success-mark { font-size:80px; margin-bottom:24px; animation:pop 0.4s cubic-bezier(0.16,1,0.3,1); }
+@keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+.success-title { font-family:'Syne',sans-serif; font-size:40px; font-weight:800; letter-spacing:-1.5px; margin-bottom:8px; }
+.success-title span { color:var(--lime); }
+.success-sub { font-family:'DM Mono',monospace; font-size:12px; color:var(--gray); letter-spacing:2px; line-height:2; margin-bottom:32px; }
+.progress-bar { width:260px; height:3px; background:var(--gray2); border-radius:3px; margin-bottom:32px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--lime); border-radius:3px; width:0; transition:width 0.1s linear; }
+
+/* ─────────────── ERROR OVERLAY ─────────────── */
+.error-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:600; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; }
+.error-overlay.show { display:flex; }
+.error-icon { font-size:60px; margin-bottom:20px; }
+.error-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:var(--red); margin-bottom:8px; }
+.error-msg { font-family:'DM Mono',monospace; font-size:12px; color:var(--gray); letter-spacing:1px; line-height:2; margin-bottom:24px; }
+
+/* ─────────────── TOAST ─────────────── */
+.toast { display:none; position:fixed; bottom:32px; left:50%; transform:translateX(-50%); background:var(--gray2); border:1px solid rgba(200,255,0,0.2); color:var(--white); padding:12px 24px; border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; z-index:700; white-space:nowrap; }
+.toast.show { display:block; animation:fadeIn 0.2s; }
+.toast.success { border-color:rgba(0,255,136,0.3); color:var(--green); }
+.toast.error { border-color:rgba(255,59,59,0.3); color:var(--red); }
+
+/* ─────────────── RECEIPT MODAL ─────────────── */
+.receipt { font-family:'DM Mono',monospace; font-size:11px; line-height:2; color:var(--white); margin-bottom:20px; }
+.receipt-row { display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; }
+.receipt-row.total { border-top:1px solid rgba(200,255,0,0.2); border-bottom:none; margin-top:8px; padding-top:12px; }
+.receipt-row.total span:last-child { color:var(--lime); font-size:16px; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="grid-bg"></div>
+<div class="conn-bar connecting" id="connBar"></div>
+
+<!-- ═══════════════ SPLASH / LOGIN ═══════════════ -->
+<div class="screen active" id="splash">
+  <div class="splash-inner">
+    <div class="brand-hero">Print<span>Duan</span></div>
+    <div class="brand-tagline">Self-Service Printing · Vientiane</div>
+
+    <div class="login-card">
+      <div class="login-card-tag">SCAN TO START</div>
+
+      <!-- QR CODE (generated from server) -->
+      <div class="qr-wrap" id="loginQRWrap">
+        <div class="qr-loading" id="qrLoading">
+          <div class="spinner"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);margin-top:10px;letter-spacing:1px;">GENERATING QR...</div>
+        </div>
+        <div id="loginQR" style="display:none;"></div>
+      </div>
+      <div class="qr-url-txt" id="loginQRUrl">Connecting to server...</div>
+
+      <!-- Session status — updates when phone scans -->
+      <div class="session-status" id="sessionStatus">
+        <div class="s-dot"></div>
+        WAITING FOR SCAN
+      </div>
+
+      <div class="divider"><span>or enter staff pin</span></div>
+
+      <div class="pin-row">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,0)">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,1)">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,2)">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,3)">
+      </div>
+      <div class="pin-error" id="pinError">⚠ INCORRECT PIN</div>
+
+      <button class="btn-lime" onclick="submitPin()">ENTER →</button>
+      <button class="btn-ghost" onclick="refreshLoginQR()">↻ REFRESH QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN SCREEN ═══════════════ -->
+<div class="screen" id="main">
+  <div class="topbar">
+    <div class="brand">Print<span>Duan</span></div>
+    <div class="topbar-right">
+      <div class="conn-pill">
+        <div class="conn-dot" id="topConnDot"></div>
+        <span id="topConnTxt">CONNECTING</span>
+      </div>
+      <div class="clock" id="clock">--:--</div>
+      <button class="icon-btn" onclick="showPriceList()">PRICE</button>
+      <button class="icon-btn" onclick="doLogout()">EXIT</button>
+    </div>
+  </div>
+
+  <div class="main-body">
+    <div class="hero">
+      <div>
+        <div class="hero-title">WHAT DO YOU<br>NEED TO <span>PRINT?</span></div>
+      </div>
+      <div class="hero-meta">
+        <div class="date" id="dateDisp">---</div>
+        <p>KIOSK: VTE-01</p>
+        <p id="sessionDisp">SESSION: ---</p>
+      </div>
+    </div>
+
+    <!-- Upload strip -->
+    <div class="upload-strip" onclick="openUpload()">
+      <div class="upload-strip-left">
+        <div class="us-icon">📁</div>
+        <div>
+          <div class="us-title">Upload File First</div>
+          <div class="us-sub">SCAN QR → BROWSER OPENS → SELECT FILE</div>
+        </div>
+      </div>
+      <div class="us-cta">SCAN QR →</div>
+    </div>
+
+    <!-- Services -->
+    <div class="sec-label">Services</div>
+    <div class="svc-grid">
+      <div class="svc-card" onclick="openPrint('doc')">
+        <div class="svc-icon">📄</div>
+        <div>
+          <div class="svc-name">Document<br>Print</div>
+          <div class="svc-desc">PDF · WORD · IMAGE</div>
+          <div class="svc-price">FROM 500 LAK/PAGE</div>
+        </div>
+      </div>
+      <div class="svc-card" onclick="openPrint('copy')">
+        <div class="svc-icon">📠</div>
+        <div>
+          <div class="svc-name">Copy &<br>Scan</div>
+          <div class="svc-desc">A4 · A3 · ID CARD</div>
+          <div class="svc-price">FROM 500 LAK/PAGE</div>
+        </div>
+      </div>
+      <div class="svc-card" onclick="openPrint('id')">
+        <div class="svc-icon">🪪</div>
+        <div>
+          <div class="svc-name">ID<br>Photo</div>
+          <div class="svc-desc">1" · 2" · 3" SIZE</div>
+          <div class="svc-price">3,000 LAK/SET</div>
+        </div>
+      </div>
+      <div class="svc-card" onclick="openPrint('photo')">
+        <div class="svc-icon">🖼️</div>
+        <div>
+          <div class="svc-name">Photo<br>Print</div>
+          <div class="svc-desc">4×6 · 5×7 · A4</div>
+          <div class="svc-price">FROM 2,000 LAK</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="promo" onclick="toast('Print 10 pages, get 2 FREE today!','success')">
+      <span class="promo-tag">PROMO</span>
+      <span class="promo-txt">Print 10 pages — get 2 FREE today</span>
+      <span class="promo-arr">→</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- UPLOAD -->
+<div class="overlay" id="uploadOverlay" onclick="closeOv(event,'uploadOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Upload File</div>
+    <div class="sheet-sub">Customer scans QR with phone camera</div>
+
+    <div class="qr-sheet-wrap">
+      <h4>Scan with Phone Camera</h4>
+      <p>NO APP NEEDED · BROWSER OPENS AUTOMATICALLY</p>
+      <div class="qr-inner" id="uploadQR"></div>
+      <div class="qr-url-txt" id="uploadQRUrl" style="margin-top:8px;"></div>
+      <div class="qr-status-txt" id="uploadQRStatus">
+        <div class="waiting-dots"><span></span><span></span><span></span></div>
+        WAITING FOR FILE
+      </div>
+    </div>
+
+    <!-- File received indicator -->
+    <div id="fileReceivedBox" style="display:none;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:var(--radius);padding:14px;text-align:center;margin-bottom:16px;">
+      <div style="font-size:28px;margin-bottom:6px;">📎</div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green);">FILE RECEIVED!</div>
+      <div id="fileReceivedName" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:1px;margin-top:4px;"></div>
+    </div>
+
+    <button class="btn-lime" id="proceedAfterUpload" onclick="closeId('uploadOverlay')" style="display:none;">SELECT PRINT OPTIONS →</button>
+    <button class="btn-ghost" onclick="closeId('uploadOverlay')">CANCEL</button>
+  </div>
+</div>
+
+<!-- PRINT OPTIONS -->
+<div class="overlay" id="printOverlay" onclick="closeOv(event,'printOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="printTitle">Document Print</div>
+    <div class="sheet-sub" id="printSub">SELECT YOUR OPTIONS</div>
+
+    <div class="opt-row" id="sizeOpts">
+      <button class="opt-btn sel" onclick="selOpt(this,'sizeOpts');calcTotal()">A4</button>
+      <button class="opt-btn" onclick="selOpt(this,'sizeOpts');calcTotal()">A3</button>
+      <button class="opt-btn" onclick="selOpt(this,'sizeOpts');calcTotal()">4×6</button>
+    </div>
+    <div class="opt-row" id="colorOpts">
+      <button class="opt-btn sel" onclick="selOpt(this,'colorOpts');calcTotal()">B&W</button>
+      <button class="opt-btn" onclick="selOpt(this,'colorOpts');calcTotal()">COLOR</button>
+    </div>
+
+    <div class="qty-row">
+      <span class="qty-label">Copies</span>
+      <div class="qty-ctrl">
+        <button class="qty-step" onclick="chgQty(-1)">−</button>
+        <span class="qty-num" id="qtyNum">1</span>
+        <button class="qty-step" onclick="chgQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="total-bar">
+      <span class="total-label">Total</span>
+      <span class="total-amt" id="totalAmt">500 LAK</span>
+    </div>
+
+    <button class="btn-lime" onclick="goToPay()">PROCEED TO PAYMENT →</button>
+    <button class="btn-ghost" onclick="closeId('printOverlay')">BACK</button>
+  </div>
+</div>
+
+<!-- PAYMENT -->
+<div class="overlay" id="payOverlay" onclick="closeOv(event,'payOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Payment</div>
+    <div class="sheet-sub">Scan QR or pay cash</div>
+
+    <div class="total-bar" style="margin-bottom:20px;">
+      <span class="total-label">Amount Due</span>
+      <span class="total-amt" id="payAmt">500 LAK</span>
+    </div>
+
+    <div class="pay-list">
+      <button class="pay-card sel" onclick="selPay(this,'bcel')">
+        <div class="pay-logo bcel">BCEL</div>
+        <div class="pay-info"><h4>BCEL One</h4><p>SCAN QR · BROWSER OPENS</p></div>
+        <div class="pay-check">✓</div>
+      </button>
+      <button class="pay-card" onclick="selPay(this,'onepay')">
+        <div class="pay-logo onepay">ONE</div>
+        <div class="pay-info"><h4>OnePay</h4><p>SCAN QR · BROWSER OPENS</p></div>
+        <div class="pay-check">✓</div>
+      </button>
+      <button class="pay-card" onclick="selPay(this,'cash')">
+        <div class="pay-logo cash">💵</div>
+        <div class="pay-info"><h4>Cash</h4><p>PAY AT KIOSK DIRECTLY</p></div>
+        <div class="pay-check">✓</div>
+      </button>
+    </div>
+
+    <!-- Payment QR -->
+    <div class="qr-sheet-wrap" id="payQRBox" style="display:none;">
+      <h4 id="payQRTitle">Pay via BCEL One</h4>
+      <p>OPEN CAMERA → SCAN → PAY IN BROWSER</p>
+      <div class="qr-inner" id="payQRCode"></div>
+      <div class="qr-url-txt" id="payQRUrl" style="margin-top:8px;"></div>
+      <div class="qr-status-txt">
+        <div class="waiting-dots"><span></span><span></span><span></span></div>
+        WAITING FOR PAYMENT
+      </div>
+    </div>
+
+    <!-- Payment confirmed -->
+    <div class="payment-confirmed" id="payConfirmedBox">
+      <div class="pc-icon">💚</div>
+      <h4>PAYMENT CONFIRMED</h4>
+    </div>
+
+    <button class="btn-lime" id="showPayQRBtn" onclick="showPayQR()">SHOW QR CODE →</button>
+    <button class="btn-lime" id="confirmCashBtn" onclick="confirmCash()" style="display:none;background:#00FF88;color:var(--navy);">✓ CASH RECEIVED</button>
+    <button class="btn-ghost" onclick="closeId('payOverlay')">BACK</button>
+  </div>
+</div>
+
+<!-- RECEIPT -->
+<div class="overlay" id="receiptOverlay" onclick="closeOv(event,'receiptOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Receipt</div>
+    <div class="sheet-sub" id="receiptRef">REF: #---</div>
+    <div class="receipt" id="receiptContent"></div>
+    <button class="btn-lime" onclick="startPrint()">🖨️ PRINT NOW →</button>
+    <button class="btn-ghost" onclick="closeId('receiptOverlay')">CLOSE</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-mark">✅</div>
+  <div class="success-title">PRINTING<br><span>STARTED</span></div>
+  <div class="success-sub" id="successSub">COLLECT YOUR DOCUMENT BELOW<br>THANK YOU!</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <button class="btn-ghost" style="width:200px;" onclick="resetKiosk()">BACK TO HOME</button>
+</div>
+
+<!-- ERROR -->
+<div class="error-overlay" id="errorOverlay">
+  <div class="error-icon">⚠️</div>
+  <div class="error-title" id="errorTitle">CONNECTION ERROR</div>
+  <div class="error-msg" id="errorMsg">Cannot connect to server.<br>Please check WiFi connection.</div>
+  <button class="btn-lime" style="width:240px;" onclick="retryConnection()">↻ RETRY CONNECTION</button>
+  <button class="btn-ghost" style="width:240px;margin-top:8px;" onclick="closeId('errorOverlay')">DISMISS</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const KIOSK_ID = 'kiosk-01';
+const SERVER = `${location.protocol}//${location.hostname}:3000`;
+const WS_URL = `ws://${location.hostname}:3000/?kiosk=${KIOSK_ID}`;
+const STAFF_PIN = '1234'; // change this!
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let ws = null;
+let currentSession = null;
+let currentOrder = null;
+let qty = 1;
+let basePrice = 500;
+let currentType = 'doc';
+let selectedPayMethod = 'bcel';
+let progressInterval = null;
+
+const prices = { doc:500, copy:500, id:3000, photo:2000 };
+const svcInfo = {
+  doc: ['Document Print','PDF · WORD · IMAGE'],
+  copy: ['Copy & Scan','DOCUMENT · ID CARD'],
+  id: ['ID Photo','1" · 2" · 3" SIZES'],
+  photo: ['Photo Print','4×6 · 5×7 · A4'],
+};
+
+// ═══════════════════════════════════════════
+// WEBSOCKET
+// ═══════════════════════════════════════════
+function connectWS() {
+  setConnStatus('connecting');
+  try {
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+      setConnStatus('connected');
+      toast('✓ Server connected','success');
+      refreshLoginQR();
+    };
+
+    ws.onclose = () => {
+      setConnStatus('disconnected');
+      toast('⚠ Server disconnected — retrying...','error');
+      setTimeout(connectWS, 3000);
+    };
+
+    ws.onerror = () => {
+      setConnStatus('disconnected');
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        handleWSMessage(msg);
+      } catch(err) {}
+    };
+  } catch(e) {
+    setConnStatus('disconnected');
+    setTimeout(connectWS, 3000);
+  }
+}
+
+function handleWSMessage(msg) {
+  console.log('[WS]', msg);
+  switch(msg.type) {
+    case 'unlock':
+      onPhoneScanned(msg.sessionId);
+      break;
+    case 'files_ready':
+      onFilesReceived(msg.files);
+      break;
+    case 'payment_confirmed':
+      onPaymentConfirmed(msg.orderId, msg.method);
+      break;
+    case 'pong':
+      break;
+  }
+}
+
+function setConnStatus(status) {
+  const bar = document.getElementById('connBar');
+  const dot = document.getElementById('topConnDot');
+  const txt = document.getElementById('topConnTxt');
+  bar.className = 'conn-bar';
+  if(dot) dot.className = 'conn-dot';
+  if(status === 'connected') {
+    bar.classList.add('connected');
+    if(dot) dot.classList.add('on');
+    if(txt) txt.textContent = 'ONLINE';
+  } else if(status === 'connecting') {
+    bar.classList.add('connecting');
+    if(dot) dot.classList.add('wait');
+    if(txt) txt.textContent = 'CONNECTING';
+  } else {
+    if(txt) txt.textContent = 'OFFLINE';
+  }
+}
+
+// ═══════════════════════════════════════════
+// QR + SESSION
+// ═══════════════════════════════════════════
+async function refreshLoginQR() {
+  document.getElementById('qrLoading').style.display = 'flex';
+  document.getElementById('loginQR').style.display = 'none';
+  document.getElementById('loginQRUrl').textContent = 'Generating session...';
+  setSessionStatus('waiting');
+
+  try {
+    const res = await fetch(`${SERVER}/api/session/create`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ kioskId: KIOSK_ID, type:'login' })
+    });
+    const data = await res.json();
+    currentSession = data.sessionId;
+
+    const mobileURL = `${SERVER}?page=login&ref=${data.sessionId}`;
+    makeQR('loginQR', mobileURL, 150);
+    document.getElementById('loginQR').style.display = 'block';
+    document.getElementById('qrLoading').style.display = 'none';
+    document.getElementById('loginQRUrl').textContent = mobileURL;
+  } catch(e) {
+    document.getElementById('qrLoading').style.display = 'none';
+    document.getElementById('loginQRUrl').textContent = '⚠ Server offline — using demo mode';
+    // Demo mode: generate QR without server
+    const demoURL = `${SERVER}?page=login&ref=DEMO001`;
+    makeQR('loginQR', demoURL, 150);
+    document.getElementById('loginQR').style.display = 'block';
+    currentSession = 'DEMO001';
+  }
+}
+
+function setSessionStatus(state) {
+  const el = document.getElementById('sessionStatus');
+  if(state === 'scanned') {
+    el.className = 'session-status scanned';
+    el.innerHTML = '<div class="s-dot"></div> PHONE CONNECTED ✓';
+  } else {
+    el.className = 'session-status';
+    el.innerHTML = '<div class="s-dot"></div> WAITING FOR SCAN';
+  }
+}
+
+function onPhoneScanned(sessionId) {
+  setSessionStatus('scanned');
+  toast('✓ Phone connected!','success');
+  // Auto login after phone scan
+  setTimeout(() => {
+    document.getElementById('sessionDisp').textContent = `SESSION: #${sessionId}`;
+    goToMain();
+  }, 800);
+}
+
+// Upload QR
+async function openUpload() {
+  document.getElementById('uploadOverlay').classList.add('open');
+  document.getElementById('fileReceivedBox').style.display = 'none';
+  document.getElementById('proceedAfterUpload').style.display = 'none';
+
+  try {
+    const res = await fetch(`${SERVER}/api/session/create`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ kioskId: KIOSK_ID, type:'upload' })
+    });
+    const data = await res.json();
+    const url = `${SERVER}?page=upload&session=${data.sessionId}`;
+    makeQR('uploadQR', url, 170);
+    document.getElementById('uploadQRUrl').textContent = url;
+  } catch(e) {
+    const url = `${SERVER}?page=upload&session=${currentSession||'DEMO'}`;
+    makeQR('uploadQR', url, 170);
+    document.getElementById('uploadQRUrl').textContent = url;
+  }
+}
+
+function onFilesReceived(files) {
+  if(!files || files.length === 0) return;
+  const f = files[0];
+  document.getElementById('fileReceivedBox').style.display = 'block';
+  document.getElementById('fileReceivedName').textContent = `${f.name} · ${(f.size/1024).toFixed(0)} KB`;
+  document.getElementById('uploadQRStatus').innerHTML = '✓ FILE RECEIVED';
+  document.getElementById('proceedAfterUpload').style.display = 'block';
+  toast(`✓ File received: ${f.name}`,'success');
+}
+
+// ═══════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════
+function pinNext(el, idx) {
+  if(el.value.length === 1 && idx < 3) {
+    document.querySelectorAll('.pin-box')[idx+1].focus();
+  }
+  if(idx === 3) checkPinComplete();
+}
+
+function checkPinComplete() {
+  const pins = document.querySelectorAll('.pin-box');
+  const pin = Array.from(pins).map(p=>p.value).join('');
+  if(pin.length === 4) submitPin();
+}
+
+function submitPin() {
+  const pins = document.querySelectorAll('.pin-box');
+  const pin = Array.from(pins).map(p=>p.value).join('');
+  if(pin === STAFF_PIN) {
+    goToMain();
+  } else {
+    document.getElementById('pinError').style.display = 'block';
+    pins.forEach(p=>{ p.value=''; p.style.borderColor='var(--red)'; });
+    setTimeout(()=>{
+      document.getElementById('pinError').style.display = 'none';
+      pins.forEach(p=>p.style.borderColor='');
+    }, 2000);
+  }
+}
+
+function goToMain() {
+  document.getElementById('splash').classList.remove('active');
+  document.getElementById('main').classList.add('active');
+}
+
+function doLogout() {
+  document.getElementById('main').classList.remove('active');
+  document.getElementById('splash').classList.add('active');
+  refreshLoginQR();
+}
+
+// ═══════════════════════════════════════════
+// PRINT OPTIONS
+// ═══════════════════════════════════════════
+function openPrint(type) {
+  currentType = type;
+  qty = 1;
+  basePrice = prices[type];
+  document.getElementById('printTitle').textContent = svcInfo[type][0];
+  document.getElementById('printSub').textContent = svcInfo[type][1];
+  document.getElementById('qtyNum').textContent = 1;
+  calcTotal();
+  document.getElementById('printOverlay').classList.add('open');
+}
+
+function selOpt(btn, gid) {
+  document.querySelectorAll(`#${gid} .opt-btn`).forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function chgQty(d) {
+  qty = Math.max(1, Math.min(99, qty+d));
+  document.getElementById('qtyNum').textContent = qty;
+  calcTotal();
+}
+
+function getTotal() {
+  const color = document.querySelector('#colorOpts .opt-btn.sel')?.textContent;
+  return basePrice * qty * (color === 'COLOR' ? 2 : 1);
+}
+
+function calcTotal() {
+  const t = getTotal();
+  document.getElementById('totalAmt').textContent = t.toLocaleString()+' LAK';
+  document.getElementById('payAmt').textContent = t.toLocaleString()+' LAK';
+}
+
+// ═══════════════════════════════════════════
+// PAYMENT
+// ═══════════════════════════════════════════
+function goToPay() {
+  closeId('printOverlay');
+  setTimeout(() => {
+    selectedPayMethod = 'bcel';
+    document.getElementById('payQRBox').style.display = 'none';
+    document.getElementById('payConfirmedBox').style.display = 'none';
+    document.getElementById('showPayQRBtn').style.display = 'block';
+    document.getElementById('confirmCashBtn').style.display = 'none';
+    document.querySelectorAll('.pay-card').forEach((c,i)=>{
+      c.classList.toggle('sel', i===0);
+    });
+    document.getElementById('payOverlay').classList.add('open');
+  }, 200);
+}
+
+function selPay(btn, method) {
+  document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('sel'));
+  btn.classList.add('sel');
+  selectedPayMethod = method;
+  document.getElementById('showPayQRBtn').style.display = method === 'cash' ? 'none' : 'block';
+  document.getElementById('confirmCashBtn').style.display = method === 'cash' ? 'block' : 'none';
+  document.getElementById('payQRBox').style.display = 'none';
+}
+
+async function showPayQR() {
+  const total = getTotal();
+  const size = document.querySelector('#sizeOpts .opt-btn.sel')?.textContent || 'A4';
+  const color = document.querySelector('#colorOpts .opt-btn.sel')?.textContent || 'B&W';
+
+  try {
+    const res = await fetch(`${SERVER}/api/order/create`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        sessionId: currentSession,
+        kioskId: KIOSK_ID,
+        service: svcInfo[currentType][0],
+        size, color, copies: qty,
+        amount: total
+      })
+    });
+    const data = await res.json();
+    currentOrder = data.order;
+
+    const payURL = `${SERVER}?page=pay&method=${selectedPayMethod}&ref=${data.orderId}&amount=${total}&service=${encodeURIComponent(svcInfo[currentType][0])}&size=${size}&color=${color}&copies=${qty}`;
+    document.getElementById('payQRTitle').textContent = `Pay via ${selectedPayMethod === 'bcel' ? 'BCEL One' : 'OnePay'}`;
+    makeQR('payQRCode', payURL, 160);
+    document.getElementById('payQRUrl').textContent = payURL;
+    document.getElementById('payQRBox').style.display = 'block';
+    document.getElementById('showPayQRBtn').style.display = 'none';
+  } catch(e) {
+    // Demo fallback
+    const ref = 'PD'+Math.random().toString(36).substr(2,6).toUpperCase();
+    const payURL = `${SERVER}?page=pay&method=${selectedPayMethod}&ref=${ref}&amount=${total}`;
+    makeQR('payQRCode', payURL, 160);
+    document.getElementById('payQRUrl').textContent = payURL;
+    document.getElementById('payQRBox').style.display = 'block';
+    document.getElementById('showPayQRBtn').style.display = 'none';
+    currentOrder = { id: ref, amount: total };
+  }
+}
+
+function confirmCash() {
+  closeId('payOverlay');
+  showReceipt('cash');
+}
+
+function onPaymentConfirmed(orderId, method) {
+  document.getElementById('payConfirmedBox').style.display = 'block';
+  toast('✓ Payment confirmed!','success');
+  setTimeout(() => {
+    closeId('payOverlay');
+    showReceipt(method);
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════
+// RECEIPT
+// ═══════════════════════════════════════════
+function showReceipt(method) {
+  const total = getTotal();
+  const size = document.querySelector('#sizeOpts .opt-btn.sel')?.textContent || 'A4';
+  const color = document.querySelector('#colorOpts .opt-btn.sel')?.textContent || 'B&W';
+  const ref = currentOrder?.id || ('PD'+Math.random().toString(36).substr(2,6).toUpperCase());
+  const now = new Date();
+
+  document.getElementById('receiptRef').textContent = `REF: #${ref}`;
+  document.getElementById('receiptContent').innerHTML = `
+    <div class="receipt-row"><span>Date</span><span>${now.toLocaleDateString()}</span></div>
+    <div class="receipt-row"><span>Time</span><span>${now.toLocaleTimeString()}</span></div>
+    <div class="receipt-row"><span>Kiosk</span><span>VTE-01</span></div>
+    <div class="receipt-row"><span>Service</span><span>${svcInfo[currentType][0]}</span></div>
+    <div class="receipt-row"><span>Size</span><span>${size}</span></div>
+    <div class="receipt-row"><span>Color</span><span>${color}</span></div>
+    <div class="receipt-row"><span>Copies</span><span>${qty}</span></div>
+    <div class="receipt-row"><span>Payment</span><span>${method.toUpperCase()}</span></div>
+    <div class="receipt-row total"><span>TOTAL</span><span>${total.toLocaleString()} LAK</span></div>
+  `;
+  document.getElementById('receiptOverlay').classList.add('open');
+}
+
+function startPrint() {
+  closeId('receiptOverlay');
+  // Notify server to print
+  if(ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type:'print_ready', orderId: currentOrder?.id, kioskId: KIOSK_ID }));
+  }
+  showSuccess();
+}
+
+// ═══════════════════════════════════════════
+// SUCCESS
+// ═══════════════════════════════════════════
+function showSuccess() {
+  document.getElementById('successOverlay').classList.add('show');
+  // Progress bar animation
+  let w = 0;
+  const fill = document.getElementById('progressFill');
+  fill.style.width = '0%';
+  progressInterval = setInterval(() => {
+    w += 1;
+    fill.style.width = w + '%';
+    if(w >= 100) {
+      clearInterval(progressInterval);
+      setTimeout(resetKiosk, 1000);
+    }
+  }, 50);
+}
+
+function resetKiosk() {
+  clearInterval(progressInterval);
+  document.getElementById('successOverlay').classList.remove('show');
+  qty = 1;
+  currentOrder = null;
+  toast('Ready for next customer','success');
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function makeQR(elId, url, size=150) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.innerHTML = '';
+  new QRCode(el, { text:url, width:size, height:size, correctLevel:QRCode.CorrectLevel.M });
+}
+
+function closeOv(e, id) {
+  if(e.target.classList.contains('overlay')) closeId(id);
+}
+function closeId(id) { document.getElementById(id).classList.remove('open'); }
+
+function selPay(btn, method) {
+  document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('sel'));
+  btn.classList.add('sel');
+  selectedPayMethod = method;
+  document.getElementById('showPayQRBtn').style.display = method==='cash' ? 'none' : 'block';
+  document.getElementById('confirmCashBtn').style.display = method==='cash' ? 'block' : 'none';
+  document.getElementById('payQRBox').style.display = 'none';
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ` ${type}` : '');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function retryConnection() {
+  closeId('errorOverlay');
+  connectWS();
+}
+
+function showPriceList() {
+  toast('A4 B&W: 500 LAK · A4 COLOR: 1,000 LAK · PHOTO: 2,000 LAK');
+}
+
+// CLOCK
+function updateClock() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const d = now.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+  document.getElementById('clock').textContent = t;
+  const dd = document.getElementById('dateDisp');
+  if(dd) dd.textContent = d;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// CURSOR
+document.addEventListener('mousemove', e => {
+  const c = document.getElementById('cursor');
+  c.style.left = (e.clientX-6)+'px';
+  c.style.top = (e.clientY-6)+'px';
+});
+
+// KEEP-ALIVE PING
+setInterval(() => {
+  if(ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({type:'ping'}));
+  }
+}, 30000);
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+window.onload = () => {
+  connectWS();
+};
+</script>
+</body>
+</html>

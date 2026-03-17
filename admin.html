@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintDuan Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0A0F1E;
+  --navy2: #111827;
+  --navy3: #0D1424;
+  --lime: #C8FF00;
+  --lime2: #B0E600;
+  --white: #F5F5F0;
+  --gray: #8892A4;
+  --gray2: #1E2535;
+  --gray3: #2A3347;
+  --green: #00FF88;
+  --red: #FF3B3B;
+  --orange: #FF8C00;
+  --blue: #4D9EFF;
+  --radius: 4px;
+  --radius-lg: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Mono',monospace; background:var(--navy3); color:var(--white); min-height:100vh; display:flex; }
+
+/* SIDEBAR */
+.sidebar { width:220px; background:var(--navy); border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; }
+.sidebar-brand { padding:28px 24px 20px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.sidebar-brand .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.5px; }
+.sidebar-brand .logo span { color:var(--lime); }
+.sidebar-brand .role { font-size:9px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; margin-top:4px; }
+
+.nav-section { padding:16px 12px 8px; }
+.nav-label { font-size:9px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; padding:0 12px; margin-bottom:6px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:var(--radius); cursor:pointer; transition:all 0.15s; color:var(--gray); font-size:11px; letter-spacing:1px; text-transform:uppercase; border:none; background:none; width:100%; text-align:left; }
+.nav-item:hover { background:var(--gray2); color:var(--white); }
+.nav-item.active { background:rgba(200,255,0,0.08); color:var(--lime); }
+.nav-item .n-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
+.nav-dot { width:6px; height:6px; border-radius:50%; background:var(--green); margin-left:auto; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.sidebar-footer { margin-top:auto; padding:16px 12px; border-top:1px solid rgba(255,255,255,0.06); }
+.kiosk-status { background:var(--gray2); border-radius:var(--radius); padding:12px; }
+.ks-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.ks-name { font-size:10px; color:var(--white); letter-spacing:1px; }
+.ks-dot { width:7px; height:7px; border-radius:50%; }
+.ks-dot.on { background:var(--green); animation:pulse 2s infinite; }
+.ks-dot.off { background:var(--red); }
+.ks-info { font-size:9px; color:var(--gray); letter-spacing:1px; }
+
+/* MAIN */
+.main { margin-left:220px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+
+/* TOPBAR */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 32px; border-bottom:1px solid rgba(255,255,255,0.06); background:var(--navy); position:sticky; top:0; z-index:50; }
+.page-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; letter-spacing:-0.5px; }
+.topbar-right { display:flex; align-items:center; gap:16px; }
+.clock-pill { font-size:11px; color:var(--lime); letter-spacing:1px; }
+.refresh-btn { background:var(--gray2); border:1px solid rgba(255,255,255,0.08); color:var(--gray); padding:8px 14px; border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:10px; cursor:pointer; letter-spacing:1px; transition:all 0.15s; }
+.refresh-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.2); }
+.logout-btn { background:rgba(255,59,59,0.08); border:1px solid rgba(255,59,59,0.2); color:var(--red); padding:8px 14px; border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:10px; cursor:pointer; letter-spacing:1px; transition:all 0.15s; }
+.logout-btn:hover { background:rgba(255,59,59,0.15); }
+
+/* CONTENT */
+.content { flex:1; padding:28px 32px; }
+
+/* TABS */
+.tab-content { display:none; }
+.tab-content.active { display:block; animation:fadeIn 0.2s; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+/* STATS GRID */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+.stat-card { background:var(--navy2); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-lg); padding:20px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+.stat-card:hover { border-color:rgba(200,255,0,0.2); }
+.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:transparent; transition:background 0.2s; }
+.stat-card:hover::before { background:var(--lime); }
+.stat-label { font-size:9px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; letter-spacing:-1px; margin-bottom:4px; }
+.stat-value.lime { color:var(--lime); }
+.stat-value.green { color:var(--green); }
+.stat-value.blue { color:var(--blue); }
+.stat-value.orange { color:var(--orange); }
+.stat-change { font-size:10px; color:var(--gray); }
+.stat-change.up { color:var(--green); }
+.stat-change.down { color:var(--red); }
+.stat-icon { position:absolute; top:20px; right:20px; font-size:24px; opacity:0.4; }
+
+/* SECTION HEADER */
+.sec-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.sec-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:800; letter-spacing:-0.3px; }
+.sec-action { font-size:10px; color:var(--lime); cursor:pointer; letter-spacing:1px; text-transform:uppercase; background:none; border:none; font-family:'DM Mono',monospace; }
+
+/* GRID 2 COL */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.grid-3 { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:20px; }
+
+/* PANEL */
+.panel { background:var(--navy2); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-lg); padding:20px; }
+
+/* TABLE */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+thead th { font-size:9px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.06); text-align:left; white-space:nowrap; }
+tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.15s; cursor:pointer; }
+tbody tr:hover { background:rgba(255,255,255,0.02); }
+tbody tr:last-child { border-bottom:none; }
+tbody td { padding:12px 14px; font-size:11px; letter-spacing:0.5px; white-space:nowrap; }
+.td-id { font-size:10px; color:var(--gray); }
+.td-service { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+.td-amount { color:var(--lime); font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+.td-time { color:var(--gray); font-size:10px; }
+
+/* STATUS BADGES */
+.badge { display:inline-block; padding:3px 8px; border-radius:2px; font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:500; }
+.badge.paid { background:rgba(0,255,136,0.1); color:var(--green); }
+.badge.pending { background:rgba(255,140,0,0.1); color:var(--orange); }
+.badge.printing { background:rgba(77,158,255,0.1); color:var(--blue); }
+.badge.done { background:rgba(200,255,0,0.1); color:var(--lime); }
+.badge.error { background:rgba(255,59,59,0.1); color:var(--red); }
+.badge.cash { background:rgba(255,255,255,0.06); color:var(--gray); }
+.badge.bcel { background:rgba(0,87,183,0.2); color:#4D9EFF; }
+.badge.onepay { background:rgba(0,166,81,0.2); color:#00FF88; }
+
+/* CHART BARS */
+.chart-wrap { padding:8px 0; }
+.chart-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.chart-label { font-size:10px; color:var(--gray); width:80px; flex-shrink:0; letter-spacing:1px; }
+.chart-bar-wrap { flex:1; height:6px; background:var(--gray2); border-radius:3px; overflow:hidden; }
+.chart-bar { height:100%; background:var(--lime); border-radius:3px; transition:width 1s cubic-bezier(0.16,1,0.3,1); }
+.chart-val { font-size:10px; color:var(--white); width:60px; text-align:right; flex-shrink:0; }
+
+/* DONUT CHART */
+.donut-wrap { display:flex; align-items:center; gap:20px; padding:8px 0; }
+.donut { position:relative; width:100px; height:100px; flex-shrink:0; }
+.donut svg { transform:rotate(-90deg); }
+.donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.donut-center .d-num { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--lime); }
+.donut-center .d-lbl { font-size:8px; color:var(--gray); letter-spacing:1px; }
+.donut-legend { flex:1; }
+.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.legend-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+.legend-label { font-size:10px; color:var(--gray); letter-spacing:1px; flex:1; }
+.legend-pct { font-size:11px; font-weight:500; }
+
+/* KIOSK CARDS */
+.kiosk-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.kiosk-card { background:var(--navy2); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-lg); padding:20px; }
+.kc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.kc-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:800; }
+.kc-status { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:2px; }
+.kc-dot { width:7px; height:7px; border-radius:50%; }
+.kc-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.kc-stat { background:var(--gray2); border-radius:var(--radius); padding:10px; }
+.kc-stat .lbl { font-size:8px; color:var(--gray); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.kc-stat .val { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; }
+.kc-stat .val.lime { color:var(--lime); }
+.kc-actions { display:flex; gap:6px; margin-top:12px; }
+.kc-btn { flex:1; padding:8px; background:var(--gray2); border:1px solid rgba(255,255,255,0.07); border-radius:var(--radius); color:var(--gray); font-family:'DM Mono',monospace; font-size:9px; cursor:pointer; letter-spacing:1px; text-transform:uppercase; transition:all 0.15s; text-align:center; }
+.kc-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.2); }
+.kc-btn.danger:hover { color:var(--red); border-color:var(--red); }
+
+/* LOG */
+.log-list { max-height:280px; overflow-y:auto; }
+.log-item { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.log-item:last-child { border-bottom:none; }
+.log-time { font-size:9px; color:var(--gray); width:50px; flex-shrink:0; padding-top:2px; }
+.log-dot { width:6px; height:6px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.log-msg { font-size:10px; line-height:1.5; letter-spacing:0.5px; }
+.log-msg .lm-ref { color:var(--lime); }
+
+/* SETTINGS */
+.settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.setting-group { background:var(--navy2); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-lg); padding:20px; }
+.sg-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.sg-title .sg-icon { font-size:16px; }
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.setting-row:last-child { border-bottom:none; }
+.sr-label { font-size:10px; color:var(--gray); letter-spacing:1px; }
+.sr-val { font-size:11px; color:var(--white); }
+.sr-input { background:var(--gray2); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); color:var(--white); font-family:'DM Mono',monospace; font-size:11px; padding:6px 10px; width:120px; }
+.sr-input:focus { outline:none; border-color:var(--lime); }
+.toggle { width:36px; height:20px; background:var(--gray2); border-radius:10px; cursor:pointer; position:relative; transition:background 0.2s; border:none; }
+.toggle.on { background:var(--lime); }
+.toggle::after { content:''; width:14px; height:14px; background:white; border-radius:50%; position:absolute; top:3px; left:3px; transition:transform 0.2s; }
+.toggle.on::after { transform:translateX(16px); background:var(--navy); }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:500; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; animation:fadeIn 0.2s; }
+.modal { background:var(--navy2); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg); padding:28px; width:480px; max-width:90vw; }
+.modal-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; margin-bottom:4px; }
+.modal-sub { font-size:10px; color:var(--gray); letter-spacing:2px; margin-bottom:20px; }
+.modal-close { float:right; background:none; border:none; color:var(--gray); font-size:18px; cursor:pointer; margin-top:-4px; }
+.modal-receipt { font-size:11px; line-height:2.2; }
+.mr-row { display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); }
+.mr-row.total { border-top:1px solid rgba(200,255,0,0.2); border-bottom:none; margin-top:6px; padding-top:10px; }
+.mr-row.total span:last-child { color:var(--lime); font-family:'Syne',sans-serif; font-size:16px; font-weight:800; }
+
+/* TOAST */
+.toast { display:none; position:fixed; bottom:24px; right:24px; background:var(--navy2); border:1px solid rgba(200,255,0,0.2); color:var(--white); padding:12px 20px; border-radius:var(--radius); font-size:11px; letter-spacing:1px; z-index:700; }
+.toast.show { display:block; animation:fadeIn 0.2s; }
+.toast.ok { border-color:rgba(0,255,136,0.3); color:var(--green); }
+.toast.err { border-color:rgba(255,59,59,0.3); color:var(--red); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--gray2); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">Print<span>Duan</span></div>
+    <div class="role">Admin Console</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <button class="nav-item active" onclick="switchTab('dashboard',this)">
+      <span class="n-icon">📊</span> Dashboard
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" onclick="switchTab('orders',this)">
+      <span class="n-icon">📋</span> Orders
+    </button>
+    <button class="nav-item" onclick="switchTab('revenue',this)">
+      <span class="n-icon">💰</span> Revenue
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">System</div>
+    <button class="nav-item" onclick="switchTab('kiosks',this)">
+      <span class="n-icon">🖨️</span> Kiosks
+    </button>
+    <button class="nav-item" onclick="switchTab('logs',this)">
+      <span class="n-icon">📝</span> Logs
+    </button>
+    <button class="nav-item" onclick="switchTab('settings',this)">
+      <span class="n-icon">⚙️</span> Settings
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="kiosk-status">
+      <div class="ks-top">
+        <span class="ks-name">VTE-01</span>
+        <div class="ks-dot on" id="sidebarDot"></div>
+      </div>
+      <div class="ks-info" id="sidebarStatus">ONLINE · 0 orders today</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="clock-pill" id="adminClock">--:--:--</div>
+      <button class="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+      <button class="logout-btn" onclick="toast('Logged out','ok')">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="tab-content active" id="tab-dashboard">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's Orders</div>
+          <div class="stat-value lime" id="statOrders">0</div>
+          <div class="stat-change up" id="statOrdersChange">Loading...</div>
+          <div class="stat-icon">📋</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-value green" id="statRevenue">0 LAK</div>
+          <div class="stat-change up" id="statRevenueChange">Loading...</div>
+          <div class="stat-icon">💰</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Sessions</div>
+          <div class="stat-value blue" id="statSessions">0</div>
+          <div class="stat-change" id="statSessionsChange">Loading...</div>
+          <div class="stat-icon">📱</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Kiosk Status</div>
+          <div class="stat-value green" id="statKiosk">ONLINE</div>
+          <div class="stat-change" id="statUptime">Uptime: --</div>
+          <div class="stat-icon">🖨️</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <!-- Recent orders -->
+        <div class="panel">
+          <div class="sec-header">
+            <div class="sec-title">Recent Orders</div>
+            <button class="sec-action" onclick="switchTab('orders',document.querySelector('.nav-item:nth-child(2)'))">VIEW ALL →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>REF</th>
+                  <th>SERVICE</th>
+                  <th>AMOUNT</th>
+                  <th>METHOD</th>
+                  <th>STATUS</th>
+                  <th>TIME</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersTable">
+                <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:24px;">Loading orders...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Service breakdown -->
+        <div class="panel">
+          <div class="sec-header">
+            <div class="sec-title">By Service</div>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--gray2)" stroke-width="12"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--lime)" stroke-width="12" stroke-dasharray="95 144" stroke-dashoffset="0" id="donutDoc"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--green)" stroke-width="12" stroke-dasharray="60 179" stroke-dashoffset="-95" id="donutPhoto"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--blue)" stroke-width="12" stroke-dasharray="40 199" stroke-dashoffset="-155" id="donutID"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="var(--orange)" stroke-width="12" stroke-dasharray="44 195" stroke-dashoffset="-195" id="donutCopy"/>
+              </svg>
+              <div class="donut-center">
+                <div class="d-num" id="donutTotal">0</div>
+                <div class="d-lbl">TOTAL</div>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--lime)"></div>
+                <div class="legend-label">Document</div>
+                <div class="legend-pct" style="color:var(--lime)" id="lgDoc">40%</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--green)"></div>
+                <div class="legend-label">Photo</div>
+                <div class="legend-pct" style="color:var(--green)" id="lgPhoto">25%</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--blue)"></div>
+                <div class="legend-label">ID Photo</div>
+                <div class="legend-pct" style="color:var(--blue)" id="lgID">17%</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--orange)"></div>
+                <div class="legend-label">Copy/Scan</div>
+                <div class="legend-pct" style="color:var(--orange)" id="lgCopy">18%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment breakdown -->
+          <div style="margin-top:20px;">
+            <div class="sec-header" style="margin-bottom:10px;">
+              <div class="sec-title" style="font-size:12px;">Payment Methods</div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-row">
+                <div class="chart-label">BCEL ONE</div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="width:55%;background:var(--blue)"></div></div>
+                <div class="chart-val" style="color:var(--blue)" id="payBcel">55%</div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label">ONEPAY</div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="width:30%;background:var(--green)"></div></div>
+                <div class="chart-val" style="color:var(--green)" id="payOnepay">30%</div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label">CASH</div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="width:15%;background:var(--gray)"></div></div>
+                <div class="chart-val" style="color:var(--gray)" id="payCash">15%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System log preview -->
+      <div class="panel">
+        <div class="sec-header">
+          <div class="sec-title">System Log</div>
+          <button class="sec-action" onclick="switchTab('logs',document.querySelector('.nav-item:nth-child(5)'))">VIEW ALL →</button>
+        </div>
+        <div class="log-list" id="dashLogList">
+          <div style="text-align:center;color:var(--gray);padding:20px;font-size:11px;">Loading logs...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ORDERS ═══ -->
+    <div class="tab-content" id="tab-orders">
+      <div class="sec-header" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="sec-title">All Orders</div>
+          <select id="orderFilter" onchange="filterOrders()" style="background:var(--gray2);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:6px 12px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;">
+            <option value="all">ALL STATUS</option>
+            <option value="paid">PAID</option>
+            <option value="printing">PRINTING</option>
+            <option value="done">DONE</option>
+            <option value="pending">PENDING</option>
+          </select>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);" id="orderCount">0 orders</div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>REF</th>
+                <th>SERVICE</th>
+                <th>SIZE</th>
+                <th>COLOR</th>
+                <th>COPIES</th>
+                <th>AMOUNT</th>
+                <th>PAYMENT</th>
+                <th>STATUS</th>
+                <th>TIME</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="allOrdersTable">
+              <tr><td colspan="10" style="text-align:center;color:var(--gray);padding:32px;">No orders yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REVENUE ═══ -->
+    <div class="tab-content" id="tab-revenue">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card">
+          <div class="stat-label">Today</div>
+          <div class="stat-value lime" id="revToday">0 LAK</div>
+          <div class="stat-change" id="revTodayOrders">0 orders</div>
+          <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Week</div>
+          <div class="stat-value green" id="revWeek">0 LAK</div>
+          <div class="stat-change">Est. projection</div>
+          <div class="stat-icon">📆</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value blue" id="revMonth">0 LAK</div>
+          <div class="stat-change">Est. projection</div>
+          <div class="stat-icon">🗓️</div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="sec-header">
+          <div class="sec-title">Revenue by Service (Today)</div>
+        </div>
+        <div class="chart-wrap" id="revChart">
+          <div class="chart-row">
+            <div class="chart-label">DOCUMENT</div>
+            <div class="chart-bar-wrap"><div class="chart-bar" id="revBarDoc" style="width:0%"></div></div>
+            <div class="chart-val" id="revValDoc">0 LAK</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">PHOTO</div>
+            <div class="chart-bar-wrap"><div class="chart-bar" id="revBarPhoto" style="width:0%;background:var(--green)"></div></div>
+            <div class="chart-val" id="revValPhoto" style="color:var(--green)">0 LAK</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">ID PHOTO</div>
+            <div class="chart-bar-wrap"><div class="chart-bar" id="revBarID" style="width:0%;background:var(--blue)"></div></div>
+            <div class="chart-val" id="revValID" style="color:var(--blue)">0 LAK</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">COPY/SCAN</div>
+            <div class="chart-bar-wrap"><div class="chart-bar" id="revBarCopy" style="width:0%;background:var(--orange)"></div></div>
+            <div class="chart-val" id="revValCopy" style="color:var(--orange)">0 LAK</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="sec-header"><div class="sec-title">Transaction History</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>REF</th><th>SERVICE</th><th>AMOUNT</th><th>METHOD</th><th>TIME</th></tr>
+            </thead>
+            <tbody id="revTable">
+              <tr><td colspan="5" style="text-align:center;color:var(--gray);padding:32px;">No transactions yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ KIOSKS ═══ -->
+    <div class="tab-content" id="tab-kiosks">
+      <div class="sec-header" style="margin-bottom:16px;">
+        <div class="sec-title">Kiosk Management</div>
+        <button class="sec-action" onclick="toast('Add kiosk coming soon')">+ ADD KIOSK</button>
+      </div>
+      <div class="kiosk-cards" id="kioskCards">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- ═══ LOGS ═══ -->
+    <div class="tab-content" id="tab-logs">
+      <div class="sec-header" style="margin-bottom:16px;">
+        <div class="sec-title">System Logs</div>
+        <button class="sec-action" onclick="clearLogs()">CLEAR LOGS</button>
+      </div>
+      <div class="panel">
+        <div class="log-list" style="max-height:600px;" id="fullLogList">
+          <div style="text-align:center;color:var(--gray);padding:32px;font-size:11px;">No logs yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div class="tab-content" id="tab-settings">
+      <div class="sec-header" style="margin-bottom:16px;">
+        <div class="sec-title">System Settings</div>
+        <button class="sec-action" onclick="saveSettings()">SAVE CHANGES</button>
+      </div>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <div class="sg-title"><span class="sg-icon">💰</span> Pricing (LAK)</div>
+          <div class="setting-row">
+            <div class="sr-label">Document B&W (A4)</div>
+            <input class="sr-input" type="number" id="priceDocBW" value="500">
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Document Color (A4)</div>
+            <input class="sr-input" type="number" id="priceDocColor" value="1000">
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Photo Print</div>
+            <input class="sr-input" type="number" id="pricePhoto" value="2000">
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">ID Photo (set)</div>
+            <input class="sr-input" type="number" id="priceID" value="3000">
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Copy/Scan</div>
+            <input class="sr-input" type="number" id="priceCopy" value="500">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="sg-title"><span class="sg-icon">🔐</span> Security</div>
+          <div class="setting-row">
+            <div class="sr-label">Staff PIN</div>
+            <input class="sr-input" type="password" id="staffPin" value="1234" maxlength="6">
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Admin Password</div>
+            <input class="sr-input" type="password" id="adminPass" value="admin123">
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Session Timeout</div>
+            <input class="sr-input" type="number" id="sessionTimeout" value="10"> 
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="sg-title"><span class="sg-icon">⚙️</span> System</div>
+          <div class="setting-row">
+            <div class="sr-label">Kiosk ID</div>
+            <div class="sr-val">VTE-01</div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Server Port</div>
+            <div class="sr-val">3000</div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Auto Print</div>
+            <button class="toggle on" id="toggleAutoPrint" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Sound Alerts</div>
+            <button class="toggle on" id="toggleSound" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Demo Mode</div>
+            <button class="toggle" id="toggleDemo" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="sg-title"><span class="sg-icon">💳</span> Payment</div>
+          <div class="setting-row">
+            <div class="sr-label">BCEL One</div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">OnePay</div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Cash</div>
+            <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="setting-row">
+            <div class="sr-label">Merchant ID</div>
+            <input class="sr-input" type="text" id="merchantId" placeholder="BCEL-XXXX">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-overlay" id="orderModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div class="modal-title" id="modalTitle">Order Detail</div>
+        <div class="modal-sub" id="modalSub">REF: #---</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('orderModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-receipt" id="modalReceipt"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button style="flex:1;padding:12px;background:var(--lime);color:var(--navy);border:none;border-radius:var(--radius);font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:1px;" onclick="printReceipt()">🖨️ PRINT RECEIPT</button>
+      <button style="flex:1;padding:12px;background:var(--gray2);color:var(--gray);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;" onclick="document.getElementById('orderModal').classList.remove('open')">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="adminToast"></div>
+
+<script>
+const SERVER = `${location.protocol}//${location.hostname}:3000`;
+let allOrders = [];
+let logs = [];
+let selectedOrder = null;
+let refreshInterval = null;
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+window.onload = () => {
+  updateClock();
+  setInterval(updateClock, 1000);
+  loadData();
+  refreshInterval = setInterval(loadData, 10000); // auto refresh every 10s
+  renderKiosks();
+};
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('adminClock').textContent =
+    now.toLocaleTimeString('en',{hour12:false});
+}
+
+// ══════════════════════════════
+// DATA LOADING
+// ══════════════════════════════
+async function loadData() {
+  await Promise.all([loadOrders(), loadHealth()]);
+}
+
+async function loadHealth() {
+  try {
+    const res = await fetch(`${SERVER}/api/health`);
+    const data = await res.json();
+
+    document.getElementById('statSessions').textContent = data.sessions;
+    document.getElementById('statSessionsChange').textContent = `${data.sessions} active`;
+    document.getElementById('statUptime').textContent = `Uptime: ${formatUptime(data.uptime)}`;
+    document.getElementById('statKiosk').textContent = data.kioskConnected ? 'ONLINE' : 'OFFLINE';
+    document.getElementById('statKiosk').className = `stat-value ${data.kioskConnected ? 'green' : 'red'}`;
+    document.getElementById('sidebarDot').className = `ks-dot ${data.kioskConnected ? 'on' : 'off'}`;
+
+    addLog('info', `Health check OK · Sessions: ${data.sessions}`);
+  } catch(e) {
+    document.getElementById('statKiosk').textContent = 'OFFLINE';
+    document.getElementById('statKiosk').className = 'stat-value red';
+    addLog('error', 'Server health check failed');
+  }
+}
+
+async function loadOrders() {
+  try {
+    const res = await fetch(`${SERVER}/api/orders`);
+    const data = await res.json();
+    allOrders = data.orders || [];
+    renderAllData();
+  } catch(e) {
+    // Demo data
+    if (allOrders.length === 0) {
+      allOrders = generateDemoOrders();
+      renderAllData();
+    }
+  }
+}
+
+function renderAllData() {
+  const today = new Date().toDateString();
+  const todayOrders = allOrders.filter(o => new Date(o.createdAt).toDateString() === today);
+  const todayRevenue = todayOrders.filter(o => o.status === 'paid' || o.status === 'done').reduce((s,o) => s + (o.amount||0), 0);
+
+  // Stats
+  document.getElementById('statOrders').textContent = todayOrders.length;
+  document.getElementById('statOrdersChange').textContent = `${allOrders.length} total`;
+  document.getElementById('statRevenue').textContent = todayRevenue.toLocaleString() + ' LAK';
+  document.getElementById('statRevenueChange').textContent = `${todayOrders.filter(o=>o.status==='paid'||o.status==='done').length} paid`;
+  document.getElementById('orderCount').textContent = `${allOrders.length} orders`;
+  document.getElementById('sidebarStatus').textContent = `ONLINE · ${todayOrders.length} orders today`;
+
+  // Revenue tab
+  document.getElementById('revToday').textContent = todayRevenue.toLocaleString() + ' LAK';
+  document.getElementById('revTodayOrders').textContent = todayOrders.length + ' orders';
+  document.getElementById('revWeek').textContent = (todayRevenue * 7).toLocaleString() + ' LAK';
+  document.getElementById('revMonth').textContent = (todayRevenue * 30).toLocaleString() + ' LAK';
+  document.getElementById('donutTotal').textContent = allOrders.length;
+
+  renderRecentOrders();
+  renderAllOrders();
+  renderRevChart(todayOrders);
+  renderRevTable(todayOrders);
+}
+
+function renderRecentOrders() {
+  const tbody = document.getElementById('recentOrdersTable');
+  const recent = allOrders.slice(0, 8);
+  if (recent.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:24px;">No orders yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(o => `
+    <tr onclick="showOrderDetail('${o.id}')">
+      <td class="td-id">#${o.id}</td>
+      <td class="td-service">${o.service || 'Document Print'}</td>
+      <td class="td-amount">${(o.amount||0).toLocaleString()} LAK</td>
+      <td><span class="badge ${o.paymentMethod||'pending'}">${(o.paymentMethod||'PENDING').toUpperCase()}</span></td>
+      <td><span class="badge ${o.status||'pending'}">${(o.status||'PENDING').toUpperCase()}</span></td>
+      <td class="td-time">${formatTime(o.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderAllOrders() {
+  const filter = document.getElementById('orderFilter').value;
+  const filtered = filter === 'all' ? allOrders : allOrders.filter(o => o.status === filter);
+  const tbody = document.getElementById('allOrdersTable');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:32px;">No orders found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(o => `
+    <tr onclick="showOrderDetail('${o.id}')">
+      <td class="td-id">#${o.id}</td>
+      <td class="td-service">${o.service || 'Document Print'}</td>
+      <td>${o.size || 'A4'}</td>
+      <td>${o.color || 'B&W'}</td>
+      <td>${o.copies || 1}</td>
+      <td class="td-amount">${(o.amount||0).toLocaleString()} LAK</td>
+      <td><span class="badge ${o.paymentMethod||'pending'}">${(o.paymentMethod||'—').toUpperCase()}</span></td>
+      <td><span class="badge ${o.status||'pending'}">${(o.status||'PENDING').toUpperCase()}</span></td>
+      <td class="td-time">${formatTime(o.createdAt)}</td>
+      <td><button onclick="event.stopPropagation();showOrderDetail('${o.id}')" style="background:var(--gray2);border:1px solid rgba(255,255,255,0.1);color:var(--gray);padding:4px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">VIEW</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterOrders() { renderAllOrders(); }
+
+function renderRevChart(orders) {
+  const svcTotals = {};
+  orders.forEach(o => {
+    if (o.status !== 'paid' && o.status !== 'done') return;
+    const svc = (o.service || 'Document Print').toLowerCase();
+    const key = svc.includes('photo') && !svc.includes('id') ? 'photo' :
+                svc.includes('id') ? 'id' :
+                svc.includes('copy') || svc.includes('scan') ? 'copy' : 'doc';
+    svcTotals[key] = (svcTotals[key]||0) + (o.amount||0);
+  });
+  const max = Math.max(...Object.values(svcTotals), 1);
+  ['doc','photo','id','copy'].forEach(k => {
+    const val = svcTotals[k] || 0;
+    document.getElementById(`revBar${k.charAt(0).toUpperCase()+k.slice(1)}`).style.width = (val/max*100)+'%';
+    document.getElementById(`revVal${k.charAt(0).toUpperCase()+k.slice(1)}`).textContent = val.toLocaleString()+' LAK';
+  });
+}
+
+function renderRevTable(orders) {
+  const paid = orders.filter(o => o.status === 'paid' || o.status === 'done');
+  const tbody = document.getElementById('revTable');
+  if (paid.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:32px;">No transactions yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = paid.map(o => `
+    <tr>
+      <td class="td-id">#${o.id}</td>
+      <td class="td-service">${o.service || 'Document Print'}</td>
+      <td class="td-amount">${(o.amount||0).toLocaleString()} LAK</td>
+      <td><span class="badge ${o.paymentMethod||'cash'}">${(o.paymentMethod||'CASH').toUpperCase()}</span></td>
+      <td class="td-time">${formatTime(o.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+
+// ══════════════════════════════
+// ORDER DETAIL
+// ══════════════════════════════
+function showOrderDetail(id) {
+  selectedOrder = allOrders.find(o => o.id === id);
+  if (!selectedOrder) return;
+  const o = selectedOrder;
+  const now = new Date(o.createdAt);
+
+  document.getElementById('modalTitle').textContent = o.service || 'Document Print';
+  document.getElementById('modalSub').textContent = `REF: #${o.id}`;
+  document.getElementById('modalReceipt').innerHTML = `
+    <div class="mr-row"><span>Reference</span><span>#${o.id}</span></div>
+    <div class="mr-row"><span>Kiosk</span><span>${o.kioskId || 'VTE-01'}</span></div>
+    <div class="mr-row"><span>Service</span><span>${o.service || 'Document Print'}</span></div>
+    <div class="mr-row"><span>Size</span><span>${o.size || 'A4'}</span></div>
+    <div class="mr-row"><span>Color</span><span>${o.color || 'B&W'}</span></div>
+    <div class="mr-row"><span>Copies</span><span>${o.copies || 1}</span></div>
+    <div class="mr-row"><span>Payment</span><span>${(o.paymentMethod || 'pending').toUpperCase()}</span></div>
+    <div class="mr-row"><span>Status</span><span>${(o.status || 'pending').toUpperCase()}</span></div>
+    <div class="mr-row"><span>Date</span><span>${now.toLocaleDateString()}</span></div>
+    <div class="mr-row"><span>Time</span><span>${now.toLocaleTimeString()}</span></div>
+    <div class="mr-row total"><span>TOTAL</span><span>${(o.amount||0).toLocaleString()} LAK</span></div>
+  `;
+  document.getElementById('orderModal').classList.add('open');
+}
+
+function printReceipt() {
+  toast('Printing receipt...','ok');
+  document.getElementById('orderModal').classList.remove('open');
+}
+
+// ══════════════════════════════
+// KIOSK CARDS
+// ══════════════════════════════
+function renderKiosks() {
+  const kiosks = [
+    { id:'VTE-01', location:'Vientiane · Center', status:'online', orders:0, revenue:0 },
+    { id:'VTE-02', location:'Vientiane · North', status:'offline', orders:0, revenue:0 },
+    { id:'PKN-01', location:'Pakse · Downtown', status:'offline', orders:0, revenue:0 },
+  ];
+  document.getElementById('kioskCards').innerHTML = kiosks.map(k => `
+    <div class="kiosk-card">
+      <div class="kc-header">
+        <div class="kc-name">${k.id}</div>
+        <div class="kc-status">
+          <div class="kc-dot ${k.status==='online'?'on':'off'}" style="background:${k.status==='online'?'var(--green)':'var(--red)'}"></div>
+          <span style="color:${k.status==='online'?'var(--green)':'var(--red)'};font-size:9px;letter-spacing:2px;">${k.status.toUpperCase()}</span>
+        </div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:1px;margin-bottom:14px;">${k.location}</div>
+      <div class="kc-stats">
+        <div class="kc-stat"><div class="lbl">Orders Today</div><div class="val lime">${k.orders}</div></div>
+        <div class="kc-stat"><div class="lbl">Revenue</div><div class="val lime">${k.revenue.toLocaleString()}</div></div>
+      </div>
+      <div class="kc-actions">
+        <div class="kc-btn" onclick="toast('Viewing ${k.id}')">VIEW</div>
+        <div class="kc-btn" onclick="toast('Restarting ${k.id}...')">RESTART</div>
+        <div class="kc-btn danger" onclick="toast('${k.id} disabled')">DISABLE</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════
+// LOGS
+// ══════════════════════════════
+function addLog(type, msg) {
+  const now = new Date();
+  const time = now.toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  logs.unshift({ type, msg, time });
+  if (logs.length > 100) logs.pop();
+  renderLogs();
+}
+
+function renderLogs() {
+  const colors = { info: 'var(--blue)', error: 'var(--red)', success: 'var(--green)', warn: 'var(--orange)' };
+  const html = logs.map(l => `
+    <div class="log-item">
+      <div class="log-time">${l.time}</div>
+      <div class="log-dot" style="background:${colors[l.type]||'var(--gray)'}"></div>
+      <div class="log-msg">${l.msg}</div>
+    </div>
+  `).join('');
+  document.getElementById('dashLogList').innerHTML = html || '<div style="text-align:center;color:var(--gray);padding:20px;font-size:11px;">No logs yet</div>';
+  document.getElementById('fullLogList').innerHTML = html || '<div style="text-align:center;color:var(--gray);padding:32px;font-size:11px;">No logs yet</div>';
+}
+
+function clearLogs() {
+  logs = [];
+  renderLogs();
+  toast('Logs cleared','ok');
+}
+
+// ══════════════════════════════
+// DEMO DATA
+// ══════════════════════════════
+function generateDemoOrders() {
+  const services = ['Document Print','Photo Print','ID Photo','Copy & Scan'];
+  const statuses = ['paid','paid','paid','done','pending'];
+  const methods = ['bcel','bcel','onepay','cash'];
+  const amounts = [500,1000,2000,3000,1500];
+  return Array.from({length:8},(_,i)=>({
+    id: 'PD'+Math.random().toString(36).substr(2,6).toUpperCase(),
+    service: services[i%4],
+    size: 'A4',
+    color: i%2===0?'B&W':'COLOR',
+    copies: Math.ceil(Math.random()*3),
+    amount: amounts[i%5],
+    status: statuses[i%5],
+    paymentMethod: methods[i%4],
+    kioskId: 'VTE-01',
+    createdAt: new Date(Date.now() - i*600000)
+  }));
+}
+
+// ══════════════════════════════
+// UTILS
+// ══════════════════════════════
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent = id.charAt(0).toUpperCase()+id.slice(1);
+}
+
+function closeModal(e) {
+  if(e.target.classList.contains('modal-overlay')) {
+    document.getElementById('orderModal').classList.remove('open');
+  }
+}
+
+function saveSettings() { toast('Settings saved ✓','ok'); }
+
+function formatTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:false});
+}
+
+function formatUptime(secs) {
+  const h = Math.floor(secs/3600);
+  const m = Math.floor((secs%3600)/60);
+  return `${h}h ${m}m`;
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('adminToast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type?' '+type:'');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

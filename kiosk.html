@@ -496,8 +496,9 @@ body { font-family:'Noto Sans Lao','Syne',sans-serif; background:var(--navy); co
 // CONFIG
 // ═══════════════════════════════════════════
 const KIOSK_ID = 'kiosk-01';
-const SERVER = `http://${location.hostname}:3000`;
-const WS_URL = `ws://${location.hostname}:3000/?kiosk=${KIOSK_ID}`;
+const SERVER = `${location.protocol}//${location.hostname}${location.port ? ':'+location.port : ''}`;
+const WS_PROTOCOL = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_URL = `${WS_PROTOCOL}//${location.hostname}${location.port ? ':'+location.port : ''}/?kiosk=${KIOSK_ID}`;
 const STAFF_PIN = '1234'; // change this!
 let MOBILE_BASE = SERVER; // will be updated with real IP
 
@@ -505,7 +506,7 @@ async function detectIP() {
   try {
     const res = await fetch('/api/localip');
     const data = await res.json();
-    MOBILE_BASE = `http://${data.ip}:3000`;
+    MOBILE_BASE = SERVER;
     console.log('[IP] Mobile URL:', MOBILE_BASE);
   } catch(e) { MOBILE_BASE = SERVER; }
 }

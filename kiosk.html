@@ -241,13 +241,26 @@ body { font-family:'Noto Sans Lao','Syne',sans-serif; background:var(--navy); co
         </div>
         <div id="loginQR" style="display:none;"></div>
       </div>
-      <a id="loginQRUrl" href="#" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--lime);text-align:center;display:block;margin-bottom:10px;word-break:break-all;text-decoration:underline;line-height:1.5;">Connecting to server...</a>
+      <div class="qr-url-txt" id="loginQRUrl">Connecting to server...</div>
 
-      <!-- Session status -->
+      <!-- Session status — updates when phone scans -->
       <div class="session-status" id="sessionStatus">
         <div class="s-dot"></div>
-        SCAN QR WITH PHONE CAMERA
+        WAITING FOR SCAN
       </div>
+
+      <div class="divider"><span>or enter staff pin</span></div>
+
+      <div class="pin-row">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,0)">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,1)">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,2)">
+        <input class="pin-box" type="password" maxlength="1" inputmode="numeric" oninput="pinNext(this,3)">
+      </div>
+      <div class="pin-error" id="pinError">⚠ INCORRECT PIN</div>
+
+      <button class="btn-lime" onclick="submitPin()">ENTER →</button>
+      <button class="btn-ghost" onclick="refreshLoginQR()">↻ REFRESH QR</button>
     </div>
   </div>
 </div>
@@ -496,19 +509,9 @@ body { font-family:'Noto Sans Lao','Syne',sans-serif; background:var(--navy); co
 // CONFIG
 // ═══════════════════════════════════════════
 const KIOSK_ID = 'kiosk-01';
-const SERVER = `http://${location.hostname}:3000`;
+const SERVER = `${location.protocol}//${location.hostname}:3000`;
 const WS_URL = `ws://${location.hostname}:3000/?kiosk=${KIOSK_ID}`;
 const STAFF_PIN = '1234'; // change this!
-let MOBILE_BASE = SERVER; // will be updated with real IP
-
-async function detectIP() {
-  try {
-    const res = await fetch('/api/localip');
-    const data = await res.json();
-    MOBILE_BASE = `http://${data.ip}:3000`;
-    console.log('[IP] Mobile URL:', MOBILE_BASE);
-  } catch(e) { MOBILE_BASE = SERVER; }
-}
 
 // ═══════════════════════════════════════════
 // STATE
@@ -610,7 +613,6 @@ async function refreshLoginQR() {
   document.getElementById('loginQR').style.display = 'none';
   document.getElementById('loginQRUrl').textContent = 'Generating session...';
   setSessionStatus('waiting');
-  await detectIP(); // always get fresh IP before generating QR
 
   try {
     const res = await fetch(`${SERVER}/api/session/create`, {
@@ -621,18 +623,16 @@ async function refreshLoginQR() {
     const data = await res.json();
     currentSession = data.sessionId;
 
-    const mobileURL = `${MOBILE_BASE}?page=login&ref=${data.sessionId}`;
+    const mobileURL = `${SERVER}?page=login&ref=${data.sessionId}`;
     makeQR('loginQR', mobileURL, 150);
     document.getElementById('loginQR').style.display = 'block';
     document.getElementById('qrLoading').style.display = 'none';
-    const urlEl = document.getElementById('loginQRUrl');
-    urlEl.textContent = mobileURL;
-    urlEl.href = mobileURL;
+    document.getElementById('loginQRUrl').textContent = mobileURL;
   } catch(e) {
     document.getElementById('qrLoading').style.display = 'none';
     document.getElementById('loginQRUrl').textContent = '⚠ Server offline — using demo mode';
     // Demo mode: generate QR without server
-    const demoURL = `${MOBILE_BASE}?page=login&ref=DEMO001`;
+    const demoURL = `${SERVER}?page=login&ref=DEMO001`;
     makeQR('loginQR', demoURL, 150);
     document.getElementById('loginQR').style.display = 'block';
     currentSession = 'DEMO001';
@@ -673,11 +673,11 @@ async function openUpload() {
       body: JSON.stringify({ kioskId: KIOSK_ID, type:'upload' })
     });
     const data = await res.json();
-    const url = `${MOBILE_BASE}?page=upload&session=${data.sessionId}`;
+    const url = `${SERVER}?page=upload&session=${data.sessionId}`;
     makeQR('uploadQR', url, 170);
     document.getElementById('uploadQRUrl').textContent = url;
   } catch(e) {
-    const url = `${MOBILE_BASE}?page=upload&session=${currentSession||'DEMO'}`;
+    const url = `${SERVER}?page=upload&session=${currentSession||'DEMO'}`;
     makeQR('uploadQR', url, 170);
     document.getElementById('uploadQRUrl').textContent = url;
   }
@@ -980,8 +980,7 @@ setInterval(() => {
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-window.onload = async () => {
-  await detectIP();
+window.onload = () => {
   connectWS();
 };
 </script>

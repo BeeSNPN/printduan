@@ -16,689 +16,667 @@
   --gray2: #1E2535;
   --green: #00FF88;
   --red: #FF3B3B;
-  --radius: 8px;
-  --radius-lg: 18px;
+  --orange: #FF8C00;
+  --r: 10px;
+  --r-lg: 20px;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; }
 body { font-family:'Noto Sans Lao','Syne',sans-serif; background:var(--navy); color:var(--white); min-height:100vh; overscroll-behavior:none; }
 
 /* PAGES */
-.page { display:none; min-height:100vh; flex-direction:column; animation:fadeIn 0.25s; }
+.page { display:none; min-height:100vh; flex-direction:column; animation:fadeUp 0.3s cubic-bezier(0.16,1,0.3,1); }
 .page.active { display:flex; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 
 /* TOPBAR */
-.topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 16px; border-bottom:1px solid rgba(255,255,255,0.06); }
-.brand { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.5px; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 16px; }
+.brand { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px; }
 .brand span { color:var(--lime); }
-.page-tag { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--gray); background:var(--gray2); padding:4px 10px; border-radius:2px; text-transform:uppercase; }
+.step-ind { display:flex; align-items:center; gap:6px; }
+.step-dot { width:8px; height:8px; border-radius:50%; background:var(--gray2); transition:all 0.3s; }
+.step-dot.active { background:var(--lime); width:20px; border-radius:4px; }
+.step-dot.done { background:var(--green); }
 
 /* CONTENT */
-.content { flex:1; padding:24px 20px 40px; overflow-y:auto; }
+.content { flex:1; padding:0 20px 40px; overflow-y:auto; }
+.section-title { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; letter-spacing:-0.5px; line-height:1.1; margin-bottom:4px; }
+.section-title span { color:var(--lime); }
+.section-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:2px; text-transform:uppercase; margin-bottom:24px; }
 
-/* TYPOGRAPHY */
-.page-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; line-height:1.1; }
-.page-title span { color:var(--lime); }
-.page-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:2px; margin-bottom:28px; text-transform:uppercase; }
+/* ── STEP 1: SERVICE ── */
+.svc-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.svc-card { background:var(--gray2); border:1.5px solid rgba(255,255,255,0.06); border-radius:var(--r-lg); padding:20px 16px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+.svc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:transparent; transition:background 0.2s; }
+.svc-card.sel { border-color:var(--lime); background:rgba(200,255,0,0.06); }
+.svc-card.sel::before { background:var(--lime); }
+.svc-card:active { transform:scale(0.97); }
+.svc-emoji { font-size:32px; margin-bottom:10px; display:block; }
+.svc-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:4px; line-height:1.2; }
+.svc-desc { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); letter-spacing:1px; line-height:1.6; }
+.svc-price { font-family:'DM Mono',monospace; font-size:10px; color:var(--lime); margin-top:10px; background:rgba(200,255,0,0.08); padding:3px 8px; border-radius:4px; display:inline-block; }
 
-/* STATUS */
-.status-pill { display:flex; align-items:center; gap:8px; padding:12px 16px; border-radius:var(--radius); margin-bottom:20px; }
-.status-pill.online { background:rgba(0,255,136,0.07); border:1px solid rgba(0,255,136,0.15); }
-.status-pill.offline { background:rgba(255,59,59,0.07); border:1px solid rgba(255,59,59,0.15); }
-.status-pill.waiting { background:rgba(200,255,0,0.07); border:1px solid rgba(200,255,0,0.15); }
-.s-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.s-dot.green { background:var(--green); animation:pulse 2s infinite; }
-.s-dot.red { background:var(--red); }
-.s-dot.lime { background:var(--lime); animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.s-text { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; }
-.s-text.green { color:var(--green); }
-.s-text.red { color:var(--red); }
-.s-text.lime { color:var(--lime); }
-.s-ref { margin-left:auto; font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); }
+/* ── STEP 2: OPTIONS ── */
+.opt-section { margin-bottom:20px; }
+.opt-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+.opt-row { display:flex; gap:8px; flex-wrap:wrap; }
+.opt-chip { padding:10px 16px; background:var(--gray2); border:1.5px solid rgba(255,255,255,0.07); border-radius:var(--r); font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); cursor:pointer; transition:all 0.15s; letter-spacing:1px; }
+.opt-chip.sel { background:rgba(200,255,0,0.1); border-color:var(--lime); color:var(--lime); }
+.opt-chip:active { transform:scale(0.96); }
 
-/* CARDS */
-.card { background:var(--gray2); border:1px solid rgba(255,255,255,0.07); border-radius:var(--radius-lg); padding:20px; margin-bottom:14px; }
-.card-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--gray); text-transform:uppercase; margin-bottom:10px; }
+/* QTY */
+.qty-card { display:flex; align-items:center; justify-content:space-between; background:var(--gray2); border-radius:var(--r); padding:16px 18px; margin-bottom:16px; }
+.qty-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:2px; }
+.qty-ctrl { display:flex; align-items:center; gap:20px; }
+.qty-num { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; min-width:32px; text-align:center; }
+.qty-btn { width:40px; height:40px; background:var(--navy); border:1.5px solid rgba(255,255,255,0.1); border-radius:var(--r); color:var(--white); font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.qty-btn:active { border-color:var(--lime); color:var(--lime); transform:scale(0.93); }
 
-/* INFO GRID */
-.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
-.info-cell { background:var(--gray2); border-radius:var(--radius); padding:14px; }
-.info-cell .lbl { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
-.info-cell .val { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
-.info-cell .val.lime { color:var(--lime); }
-.info-cell .val.green { color:var(--green); }
+/* TOTAL */
+.total-card { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; background:rgba(200,255,0,0.05); border:1.5px solid rgba(200,255,0,0.15); border-radius:var(--r); margin-bottom:20px; }
+.total-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:3px; }
+.total-amt { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--lime); letter-spacing:-1px; }
 
-/* BUTTONS */
-.btn-lime { width:100%; padding:16px; background:var(--lime); color:var(--navy); border:none; border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:14px; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; margin-bottom:10px; display:block; }
-.btn-lime:active { transform:scale(0.98); background:var(--lime2); }
-.btn-lime:disabled { opacity:0.4; }
-.btn-green { width:100%; padding:16px; background:var(--green); color:var(--navy); border:none; border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:14px; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; margin-bottom:10px; display:block; }
-.btn-ghost { width:100%; padding:14px; background:transparent; color:var(--gray); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; display:block; }
-.btn-ghost:active { border-color:var(--lime); color:var(--lime); }
-
-/* UPLOAD ZONE */
-.upload-zone { border:2px dashed rgba(200,255,0,0.2); border-radius:var(--radius-lg); padding:36px 20px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
-.upload-zone:active { border-color:var(--lime); background:rgba(200,255,0,0.03); }
-.uz-icon { font-size:40px; margin-bottom:12px; }
-.uz-title { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; margin-bottom:6px; }
-.uz-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; line-height:1.8; }
-.uz-sub span { color:var(--lime); }
+/* ── STEP 3: UPLOAD ── */
+.upload-zone { border:2px dashed rgba(200,255,0,0.25); border-radius:var(--r-lg); padding:40px 20px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
+.upload-zone:active { border-color:var(--lime); background:rgba(200,255,0,0.04); }
+.uz-icon { font-size:44px; margin-bottom:14px; }
+.uz-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; margin-bottom:6px; }
+.uz-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; line-height:2; }
+.uz-sub em { color:var(--lime); font-style:normal; }
 input[type=file] { display:none; }
 
-/* FILE ITEMS */
-.file-item { display:flex; align-items:center; gap:12px; padding:14px; background:var(--gray2); border-radius:var(--radius); margin-bottom:8px; border:1px solid rgba(255,255,255,0.06); }
-.file-ico { width:42px; height:42px; background:rgba(200,255,0,0.08); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.file-item { display:flex; align-items:center; gap:12px; padding:14px; background:var(--gray2); border-radius:var(--r); margin-bottom:8px; }
+.file-ico { width:40px; height:40px; background:rgba(200,255,0,0.08); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
 .file-info { flex:1; min-width:0; }
 .file-name { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
-.file-size { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; }
-.file-del { background:none; border:none; color:var(--gray); font-size:16px; cursor:pointer; padding:4px 8px; }
-.file-del:active { color:var(--red); }
+.file-size { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); }
+.file-del { background:none; border:none; color:var(--gray); font-size:18px; cursor:pointer; padding:4px 8px; }
 
-/* PROGRESS BAR */
-.upload-progress { background:var(--gray2); border-radius:var(--radius); padding:16px; margin-bottom:12px; display:none; }
+.prog-wrap { background:var(--gray2); border-radius:var(--r); padding:16px; margin-bottom:12px; display:none; }
 .prog-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:2px; margin-bottom:10px; }
-.prog-bar { height:3px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
-.prog-fill { height:100%; background:var(--lime); border-radius:3px; width:0; transition:width 0.3s; }
-.prog-pct { font-family:'DM Mono',monospace; font-size:11px; color:var(--lime); letter-spacing:1px; margin-top:8px; text-align:right; }
+.prog-bar { height:4px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+.prog-fill { height:100%; background:var(--lime); border-radius:4px; width:0; transition:width 0.3s; }
+.prog-pct { font-family:'DM Mono',monospace; font-size:11px; color:var(--lime); margin-top:8px; text-align:right; }
 
-/* PAYMENT */
-.amount-hero { background:linear-gradient(135deg,rgba(200,255,0,0.07),rgba(200,255,0,0.02)); border:1px solid rgba(200,255,0,0.15); border-radius:var(--radius-lg); padding:28px 20px; text-align:center; margin-bottom:20px; }
-.amt-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; }
-.amt-value { font-family:'Syne',sans-serif; font-size:44px; font-weight:800; color:var(--lime); letter-spacing:-2px; margin-bottom:4px; }
+/* ── STEP 4: PAYMENT ── */
+.amt-hero { background:linear-gradient(135deg,rgba(200,255,0,0.08),rgba(200,255,0,0.02)); border:1.5px solid rgba(200,255,0,0.15); border-radius:var(--r-lg); padding:28px 20px; text-align:center; margin-bottom:20px; }
+.amt-lbl { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:3px; margin-bottom:8px; }
+.amt-val { font-family:'Syne',sans-serif; font-size:48px; font-weight:800; color:var(--lime); letter-spacing:-2px; line-height:1; margin-bottom:6px; }
 .amt-ref { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:2px; }
 
-/* PAY METHOD */
-.pay-btn { display:flex; align-items:center; gap:14px; padding:16px; background:var(--gray2); border:1.5px solid rgba(255,255,255,0.07); border-radius:var(--radius); cursor:pointer; width:100%; text-align:left; margin-bottom:10px; transition:all 0.15s; font-family:inherit; }
-.pay-btn.sel { border-color:var(--lime); background:rgba(200,255,0,0.05); }
-.pay-btn:active { transform:scale(0.98); }
-.pay-logo { width:54px; height:32px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; font-weight:600; color:white; flex-shrink:0; }
-.bcel { background:linear-gradient(135deg,#0057B7,#0080FF); }
-.onepay { background:linear-gradient(135deg,#00A651,#00CC66); }
-.pay-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:2px; color:var(--white); }
+.pay-card { display:flex; align-items:center; gap:14px; padding:16px; background:var(--gray2); border:1.5px solid rgba(255,255,255,0.07); border-radius:var(--r); cursor:pointer; width:100%; text-align:left; margin-bottom:10px; transition:all 0.15s; }
+.pay-card.sel { border-color:var(--lime); background:rgba(200,255,0,0.05); }
+.pay-card:active { transform:scale(0.98); }
+.pay-logo { width:56px; height:34px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:11px; font-weight:700; color:white; flex-shrink:0; }
+.bcel-logo { background:linear-gradient(135deg,#0057B7,#0080FF); }
+.onepay-logo { background:linear-gradient(135deg,#00A651,#00CC66); }
+.cash-logo { background:var(--gray2); border:1px solid rgba(255,255,255,0.15); font-size:18px; }
+.pay-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:2px; color:var(--white); }
 .pay-desc { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; }
-.pay-check { margin-left:auto; color:var(--lime); opacity:0; font-size:18px; }
-.pay-btn.sel .pay-check { opacity:1; }
+.pay-check { margin-left:auto; color:var(--lime); opacity:0; font-size:20px; }
+.pay-card.sel .pay-check { opacity:1; }
 
 /* ORDER SUMMARY */
-.order-summary { background:var(--gray2); border-radius:var(--radius-lg); padding:18px; margin-bottom:20px; }
-.os-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--gray); text-transform:uppercase; margin-bottom:12px; }
-.os-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
-.os-row:last-child { border-bottom:none; padding-top:12px; margin-top:4px; border-top:1px solid rgba(200,255,0,0.15); }
-.os-key { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:1px; }
-.os-val { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-.os-val.lime { color:var(--lime); font-size:16px; }
+.summary { background:var(--gray2); border-radius:var(--r-lg); padding:18px; margin-bottom:20px; }
+.summary-title { font-family:'DM Mono',monospace; font-size:9px; color:var(--gray); letter-spacing:3px; text-transform:uppercase; margin-bottom:14px; }
+.summary-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.summary-row:last-child { border-bottom:none; padding-top:14px; margin-top:4px; border-top:1px solid rgba(200,255,0,0.15); }
+.s-key { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:1px; }
+.s-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+.s-val.lime { color:var(--lime); font-size:18px; }
 
-/* SUCCESS */
-#successPage { align-items:center; justify-content:center; text-align:center; padding:40px 24px; }
-.suc-icon { font-size:80px; margin-bottom:24px; animation:pop 0.5s cubic-bezier(0.16,1,0.3,1); }
+/* ── STEP 5: SUCCESS ── */
+#successPage { align-items:center; justify-content:center; text-align:center; padding:40px 24px; min-height:100vh; }
+.suc-mark { font-size:80px; margin-bottom:20px; animation:pop 0.5s cubic-bezier(0.16,1,0.3,1); }
 @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
-.suc-title { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; letter-spacing:-1px; margin-bottom:8px; line-height:1.1; }
+.suc-title { font-family:'Syne',sans-serif; font-size:34px; font-weight:800; letter-spacing:-1px; margin-bottom:8px; line-height:1.1; }
 .suc-title span { color:var(--lime); }
-.suc-sub { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:2px; line-height:2; margin-bottom:32px; }
-.steps-card { width:100%; background:var(--gray2); border-radius:var(--radius-lg); padding:20px; margin-bottom:28px; text-align:left; }
-.step-row { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-.step-row:last-child { border-bottom:none; }
-.step-num { width:28px; height:28px; background:var(--lime); color:var(--navy); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-size:12px; font-weight:800; flex-shrink:0; }
-.step-txt { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; line-height:1.5; }
+.suc-sub { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:2px; line-height:2.2; margin-bottom:32px; }
+.receipt-card { width:100%; background:var(--gray2); border-radius:var(--r-lg); padding:20px; text-align:left; margin-bottom:24px; }
+.receipt-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'DM Mono',monospace; font-size:11px; }
+.receipt-row:last-child { border-bottom:none; }
+.receipt-row span:first-child { color:var(--gray); }
+.receipt-row.total { border-top:1px solid rgba(200,255,0,0.2); border-bottom:none; margin-top:6px; padding-top:14px; }
+.receipt-row.total span:last-child { color:var(--lime); font-family:'Syne',sans-serif; font-size:18px; font-weight:800; }
 
-/* ERROR */
-.error-card { background:rgba(255,59,59,0.07); border:1px solid rgba(255,59,59,0.2); border-radius:var(--radius); padding:16px; margin-bottom:16px; display:none; }
-.error-card .e-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--red); margin-bottom:4px; }
-.error-card .e-msg { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:1px; line-height:1.6; }
+/* BUTTONS */
+.btn-lime { width:100%; padding:18px; background:var(--lime); color:var(--navy); border:none; border-radius:var(--r); font-family:'Syne',sans-serif; font-size:15px; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; margin-bottom:10px; display:block; }
+.btn-lime:active { background:var(--lime2); transform:scale(0.98); }
+.btn-lime:disabled { opacity:0.35; cursor:not-allowed; }
+.btn-ghost { width:100%; padding:16px; background:transparent; color:var(--gray); border:1px solid rgba(255,255,255,0.1); border-radius:var(--r); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; display:block; margin-bottom:10px; }
+.btn-ghost:active { border-color:var(--lime); color:var(--lime); }
+.btn-green { width:100%; padding:18px; background:var(--green); color:var(--navy); border:none; border-radius:var(--r); font-family:'Syne',sans-serif; font-size:15px; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; margin-bottom:10px; display:block; }
+.btn-green:active { transform:scale(0.98); }
+.btn-green:disabled { opacity:0.35; }
 
-/* LOADING STATE */
-.loading-state { text-align:center; padding:40px 20px; }
-.spinner { width:32px; height:32px; border:2px solid rgba(200,255,0,0.15); border-top-color:var(--lime); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
-@keyframes spin { to{transform:rotate(360deg)} }
-.loading-txt { font-family:'DM Mono',monospace; font-size:11px; color:var(--gray); letter-spacing:2px; }
+/* BACK BUTTON */
+.back-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--gray); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; cursor:pointer; padding:0 0 20px; }
+.back-btn:active { color:var(--lime); }
 
 /* TOAST */
-.toast { display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--gray2); border:1px solid rgba(200,255,0,0.2); color:var(--white); padding:12px 20px; border-radius:var(--radius); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; z-index:999; white-space:nowrap; max-width:90vw; }
-.toast.show { display:block; animation:fadeIn 0.2s; }
+.toast { display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--gray2); border:1px solid rgba(200,255,0,0.2); color:var(--white); padding:12px 20px; border-radius:var(--r); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; z-index:999; white-space:nowrap; max-width:88vw; }
+.toast.show { display:block; animation:fadeUp 0.2s; }
 .toast.ok { border-color:rgba(0,255,136,0.3); color:var(--green); }
 .toast.err { border-color:rgba(255,59,59,0.3); color:var(--red); }
+
+/* SPINNER */
+.spin-wrap { text-align:center; padding:40px; }
+.spinner { width:32px; height:32px; border:2px solid rgba(200,255,0,0.15); border-top-color:var(--lime); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.spin-txt { font-family:'DM Mono',monospace; font-size:10px; color:var(--gray); letter-spacing:2px; }
 </style>
 </head>
 <body>
 
-<!-- ═══════════ LOGIN PAGE ═══════════ -->
-<div class="page active" id="loginPage">
+<!-- ═══════ STEP 1: SELECT SERVICE ═══════ -->
+<div class="page active" id="p1">
   <div class="topbar">
     <div class="brand">Print<span>Duan</span></div>
-    <div class="page-tag">LOGIN</div>
+    <div class="step-ind">
+      <div class="step-dot active" id="d1"></div>
+      <div class="step-dot" id="d2"></div>
+      <div class="step-dot" id="d3"></div>
+      <div class="step-dot" id="d4"></div>
+    </div>
   </div>
   <div class="content">
-    <div style="text-align:center;padding:28px 0 24px;">
-      <div style="font-size:52px;margin-bottom:16px;">🖨️</div>
-      <div class="page-title">Unlock <span>Kiosk</span></div>
-      <div class="page-sub">Scanned from kiosk · confirm below</div>
-    </div>
+    <div class="section-title">ເລືອກ<br><span>Service</span></div>
+    <div class="section-sub">Select your printing service</div>
 
-    <!-- Loading state -->
-    <div class="loading-state" id="loginLoading">
-      <div class="spinner"></div>
-      <div class="loading-txt">CONNECTING TO SERVER...</div>
-    </div>
-
-    <!-- Ready state -->
-    <div id="loginReady" style="display:none;">
-      <div class="status-pill online">
-        <div class="s-dot green"></div>
-        <div class="s-text green">CONNECTED TO KIOSK</div>
-        <div class="s-ref" id="loginRefDisp">#---</div>
+    <div class="svc-grid">
+      <div class="svc-card" onclick="selSvc(this,'doc',500)">
+        <span class="svc-emoji">📄</span>
+        <div class="svc-name">Document Print</div>
+        <div class="svc-desc">PDF · Word · Image</div>
+        <div class="svc-price">500 LAK/page</div>
       </div>
-
-      <div class="card">
-        <div class="card-label">Kiosk Info</div>
-        <div class="info-grid" style="margin-bottom:0;">
-          <div class="info-cell">
-            <div class="lbl">Location</div>
-            <div class="val">VTE-01</div>
-          </div>
-          <div class="info-cell">
-            <div class="lbl">Session</div>
-            <div class="val lime" id="loginSessionVal">#---</div>
-          </div>
-        </div>
+      <div class="svc-card" onclick="selSvc(this,'copy',500)">
+        <span class="svc-emoji">📠</span>
+        <div class="svc-name">Copy & Scan</div>
+        <div class="svc-desc">A4 · A3 · ID Card</div>
+        <div class="svc-price">500 LAK/page</div>
       </div>
-
-      <button class="btn-lime" onclick="confirmLogin()" id="loginBtn">✓ CONFIRM & UNLOCK KIOSK</button>
-      <button class="btn-ghost" onclick="cancelLogin()">CANCEL</button>
+      <div class="svc-card" onclick="selSvc(this,'id',3000)">
+        <span class="svc-emoji">🪪</span>
+        <div class="svc-name">ID Photo</div>
+        <div class="svc-desc">1" · 2" · 3" sizes</div>
+        <div class="svc-price">3,000 LAK/set</div>
+      </div>
+      <div class="svc-card" onclick="selSvc(this,'photo',2000)">
+        <span class="svc-emoji">🖼️</span>
+        <div class="svc-name">Photo Print</div>
+        <div class="svc-desc">4×6 · 5×7 · A4</div>
+        <div class="svc-price">2,000 LAK+</div>
+      </div>
     </div>
 
-    <!-- Error state -->
-    <div class="error-card" id="loginError">
-      <div class="e-title">⚠ Session Error</div>
-      <div class="e-msg" id="loginErrorMsg">Invalid or expired session. Please scan QR again.</div>
-    </div>
+    <button class="btn-lime" id="nextBtn1" onclick="goStep(2)" disabled>NEXT: SELECT OPTIONS →</button>
   </div>
 </div>
 
-<!-- ═══════════ UPLOAD PAGE ═══════════ -->
-<div class="page" id="uploadPage">
+<!-- ═══════ STEP 2: OPTIONS ═══════ -->
+<div class="page" id="p2">
   <div class="topbar">
     <div class="brand">Print<span>Duan</span></div>
-    <div class="page-tag">UPLOAD</div>
+    <div class="step-ind">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
   </div>
   <div class="content">
-    <div class="page-title">Upload <span>File</span></div>
-    <div class="page-sub">Select file from your phone</div>
+    <button class="back-btn" onclick="goStep(1)">← BACK</button>
+    <div class="section-title">ຕັ້ງຄ່າ<br><span>Options</span></div>
+    <div class="section-sub">Choose your print settings</div>
 
-    <div class="status-pill waiting" id="uploadStatusPill">
-      <div class="s-dot lime"></div>
-      <div class="s-text lime">READY TO UPLOAD</div>
-      <div class="s-ref" id="uploadRefDisp">#---</div>
+    <div class="opt-section" id="sizeSection">
+      <div class="opt-label">Paper Size</div>
+      <div class="opt-row" id="sizeOpts">
+        <div class="opt-chip sel" onclick="selOpt(this,'sizeOpts');calcTotal()">A4</div>
+        <div class="opt-chip" onclick="selOpt(this,'sizeOpts');calcTotal()">A3</div>
+        <div class="opt-chip" onclick="selOpt(this,'sizeOpts');calcTotal()">4×6</div>
+        <div class="opt-chip" onclick="selOpt(this,'sizeOpts');calcTotal()">5×7</div>
+      </div>
     </div>
 
-    <!-- Upload zone -->
+    <div class="opt-section" id="colorSection">
+      <div class="opt-label">Color Mode</div>
+      <div class="opt-row" id="colorOpts">
+        <div class="opt-chip sel" onclick="selOpt(this,'colorOpts');calcTotal()">B&W</div>
+        <div class="opt-chip" onclick="selOpt(this,'colorOpts');calcTotal()">COLOR</div>
+      </div>
+    </div>
+
+    <div class="qty-card">
+      <div class="qty-label">COPIES / ສຳເນົາ</div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="chgQty(-1)">−</button>
+        <div class="qty-num" id="qtyNum">1</div>
+        <button class="qty-btn" onclick="chgQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="total-card">
+      <div class="total-label">TOTAL</div>
+      <div class="total-amt" id="totalAmt">500 LAK</div>
+    </div>
+
+    <button class="btn-lime" onclick="goStep(3)">NEXT: UPLOAD FILE →</button>
+    <button class="btn-ghost" onclick="goStep(1)">BACK</button>
+  </div>
+</div>
+
+<!-- ═══════ STEP 3: UPLOAD ═══════ -->
+<div class="page" id="p3">
+  <div class="topbar">
+    <div class="brand">Print<span>Duan</span></div>
+    <div class="step-ind">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goStep(2)">← BACK</button>
+    <div class="section-title">ອັບໂຫລດ<br><span>File</span></div>
+    <div class="section-sub">Select file from your phone</div>
+
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
       <div class="uz-icon">📁</div>
       <div class="uz-title">Tap to Select File</div>
-      <div class="uz-sub">PDF · DOC · JPG · PNG · DRIVE<br><span>MAX 50MB · ALL FILES SUPPORTED</span></div>
+      <div class="uz-sub">PDF · DOC · JPG · PNG · Google Drive<br><em>MAX 50MB · ALL FILES SUPPORTED</em></div>
     </div>
     <input type="file" id="fileInput" multiple accept="*/*" onchange="handleFiles(this.files)">
 
-    <!-- File list -->
     <div id="fileList"></div>
 
-    <!-- Progress -->
-    <div class="upload-progress" id="uploadProgress">
-      <div class="prog-label">UPLOADING TO KIOSK...</div>
+    <div class="prog-wrap" id="progWrap">
+      <div class="prog-label">UPLOADING...</div>
       <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
       <div class="prog-pct" id="progPct">0%</div>
     </div>
 
-    <!-- Info grid -->
-    <div class="info-grid">
-      <div class="info-cell">
-        <div class="lbl">Files</div>
-        <div class="val lime" id="fileCountVal">0</div>
-      </div>
-      <div class="info-cell">
-        <div class="lbl">Status</div>
-        <div class="val green" id="fileStatusVal">READY</div>
-      </div>
+    <div id="uploadDone" style="display:none;text-align:center;padding:24px 0 16px;">
+      <div style="font-size:48px;margin-bottom:12px;">✅</div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green);margin-bottom:6px;">File Sent!</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:1px;">READY TO PROCEED TO PAYMENT</div>
     </div>
 
-    <!-- Error -->
-    <div class="error-card" id="uploadError">
-      <div class="e-title">⚠ Upload Failed</div>
-      <div class="e-msg" id="uploadErrorMsg">Could not upload file. Please try again.</div>
-    </div>
-
-    <button class="btn-lime" id="sendBtn" onclick="sendFiles()" disabled style="opacity:0.4;">SEND TO KIOSK →</button>
-    <button class="btn-ghost" onclick="resetUpload()">CLEAR</button>
-
-    <!-- Upload success -->
-    <div id="uploadDone" style="display:none;text-align:center;padding:24px 0;">
-      <div style="font-size:52px;margin-bottom:14px;">✅</div>
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;">File Sent!</div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:2px;margin-bottom:24px;line-height:2;">GO BACK TO KIOSK<br>TO SELECT PRINT OPTIONS</div>
-      <button class="btn-ghost" onclick="resetUpload()">UPLOAD ANOTHER FILE</button>
-    </div>
+    <button class="btn-lime" id="sendBtn" onclick="sendFiles()" disabled style="opacity:0.35;">SEND TO PRINTER →</button>
+    <button class="btn-lime" id="skipUploadBtn" onclick="goStep(4)" style="display:none;background:var(--gray2);color:var(--white);">SKIP (COPY/SCAN) →</button>
+    <button class="btn-ghost" onclick="goStep(2)">BACK</button>
   </div>
 </div>
 
-<!-- ═══════════ PAYMENT PAGE ═══════════ -->
-<div class="page" id="payPage">
+<!-- ═══════ STEP 4: PAYMENT ═══════ -->
+<div class="page" id="p4">
   <div class="topbar">
     <div class="brand">Print<span>Duan</span></div>
-    <div class="page-tag">PAYMENT</div>
+    <div class="step-ind">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+    </div>
   </div>
   <div class="content">
+    <button class="back-btn" onclick="goStep(3)">← BACK</button>
+    <div class="section-title">ຈ່າຍເງິນ<br><span>Payment</span></div>
+    <div class="section-sub">Choose your payment method</div>
 
-    <!-- Loading -->
-    <div class="loading-state" id="payLoading">
-      <div class="spinner"></div>
-      <div class="loading-txt">LOADING ORDER...</div>
+    <div class="amt-hero">
+      <div class="amt-lbl">TOTAL DUE · ຍອດທີ່ຕ້ອງຈ່າຍ</div>
+      <div class="amt-val" id="payAmtDisp">500 LAK</div>
+      <div class="amt-ref" id="payRefDisp">REF: #---</div>
     </div>
 
-    <!-- Payment ready -->
-    <div id="payReady" style="display:none;">
-      <div class="amount-hero">
-        <div class="amt-label">Total Due</div>
-        <div class="amt-value" id="payAmtVal">500 LAK</div>
-        <div class="amt-ref" id="payRefVal">REF: #---</div>
+    <button class="pay-card sel" id="bcelBtn" onclick="selPay(this,'bcel')">
+      <div class="pay-logo bcel-logo">BCEL</div>
+      <div>
+        <div class="pay-name">BCEL One</div>
+        <div class="pay-desc">SCAN & PAY VIA BCEL ONE APP</div>
       </div>
-
-      <!-- Payment methods -->
-      <button class="pay-btn sel" id="bcelBtn" onclick="selPay(this,'bcel')">
-        <div class="pay-logo bcel">BCEL</div>
-        <div>
-          <div class="pay-name">BCEL One</div>
-          <div class="pay-desc">TRANSFER VIA BCEL ONE APP</div>
-        </div>
-        <div class="pay-check">✓</div>
-      </button>
-      <button class="pay-btn" id="onepayBtn" onclick="selPay(this,'onepay')">
-        <div class="pay-logo onepay">ONE</div>
-        <div>
-          <div class="pay-name">OnePay</div>
-          <div class="pay-desc">PAY VIA ONEPAY WALLET</div>
-        </div>
-        <div class="pay-check">✓</div>
-      </button>
-
-      <!-- Order summary -->
-      <div class="order-summary">
-        <div class="os-title">Order Summary</div>
-        <div class="os-row"><span class="os-key">Service</span><span class="os-val" id="osSvc">---</span></div>
-        <div class="os-row"><span class="os-key">Size</span><span class="os-val" id="osSize">---</span></div>
-        <div class="os-row"><span class="os-key">Color</span><span class="os-val" id="osColor">---</span></div>
-        <div class="os-row"><span class="os-key">Copies</span><span class="os-val" id="osCopies">---</span></div>
-        <div class="os-row"><span class="os-key">Total</span><span class="os-val lime" id="osTotal">---</span></div>
+      <div class="pay-check">✓</div>
+    </button>
+    <button class="pay-card" id="onepayBtn" onclick="selPay(this,'onepay')">
+      <div class="pay-logo onepay-logo">ONE</div>
+      <div>
+        <div class="pay-name">OnePay</div>
+        <div class="pay-desc">PAY VIA ONEPAY WALLET</div>
       </div>
-
-      <!-- Error -->
-      <div class="error-card" id="payError">
-        <div class="e-title">⚠ Payment Failed</div>
-        <div class="e-msg" id="payErrorMsg">Could not process payment. Please try again.</div>
+      <div class="pay-check">✓</div>
+    </button>
+    <button class="pay-card" id="cashBtn" onclick="selPay(this,'cash')">
+      <div class="pay-logo cash-logo">💵</div>
+      <div>
+        <div class="pay-name">Cash</div>
+        <div class="pay-desc">PAY AT THE COUNTER</div>
       </div>
+      <div class="pay-check">✓</div>
+    </button>
 
-      <button class="btn-green" id="payBtn" onclick="confirmPayment()">✓ CONFIRM PAYMENT</button>
-      <button class="btn-ghost" onclick="cancelPayment()">CANCEL</button>
+    <div class="summary">
+      <div class="summary-title">Order Summary</div>
+      <div class="summary-row"><span class="s-key">Service</span><span class="s-val" id="sumSvc">---</span></div>
+      <div class="summary-row"><span class="s-key">Size</span><span class="s-val" id="sumSize">---</span></div>
+      <div class="summary-row"><span class="s-key">Color</span><span class="s-val" id="sumColor">---</span></div>
+      <div class="summary-row"><span class="s-key">Copies</span><span class="s-val" id="sumCopies">---</span></div>
+      <div class="summary-row"><span class="s-key">TOTAL</span><span class="s-val lime" id="sumTotal">---</span></div>
     </div>
 
-    <!-- Payment success -->
-    <div id="payDone" style="display:none;text-align:center;padding:24px 0;">
-      <div style="font-size:52px;margin-bottom:14px;">💚</div>
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;color:var(--green);">Payment Done!</div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:2px;line-height:2;">KIOSK IS NOW PRINTING<br>COLLECT FROM PRINTER TRAY 🖨️</div>
-    </div>
+    <button class="btn-green" id="payBtn" onclick="confirmPayment()">✓ CONFIRM PAYMENT</button>
+    <button class="btn-ghost" onclick="goStep(3)">BACK</button>
   </div>
 </div>
 
-<!-- ═══════════ SUCCESS PAGE ═══════════ -->
+<!-- ═══════ STEP 5: SUCCESS ═══════ -->
 <div class="page" id="successPage">
-  <div class="suc-icon">✅</div>
-  <div class="suc-title">Kiosk<br><span>Unlocked!</span></div>
-  <div class="suc-sub">GO BACK TO THE KIOSK SCREEN<br>TO SELECT YOUR SERVICE</div>
-  <div class="steps-card">
-    <div class="step-row">
-      <div class="step-num">1</div>
-      <div class="step-txt">Kiosk screen is now unlocked</div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">2</div>
-      <div class="step-txt">Select your service on kiosk</div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">3</div>
-      <div class="step-txt">Scan upload QR to send file</div>
-    </div>
-    <div class="step-row">
-      <div class="step-num">4</div>
-      <div class="step-txt">Scan payment QR to pay</div>
-    </div>
-  </div>
-  <button class="btn-lime" style="width:100%;max-width:300px;" onclick="showPage('uploadPage')">GO TO UPLOAD →</button>
+  <div class="suc-mark">🎉</div>
+  <div class="suc-title">ສຳເລັດ!<br><span>Order Placed</span></div>
+  <div class="suc-sub" id="sucSub">YOUR DOCUMENT WILL BE PRINTED<br>COLLECT FROM THE PRINTER TRAY 🖨️</div>
+
+  <div class="receipt-card" id="receiptCard"></div>
+
+  <button class="btn-lime" style="width:100%;max-width:320px;" onclick="resetAll()">PRINT ANOTHER →</button>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toastEl"></div>
 
 <script>
-// ═══════════════════════════════════
-// CONFIG — auto detect server URL
-// ═══════════════════════════════════
-const SERVER = `${location.protocol}//${location.hostname}`;
+// ════════════════════════════════
+// CONFIG
+// ════════════════════════════════
+const SERVER = `${location.protocol}//${location.host}`;
+const KIOSK_ID = 'kiosk-01';
 
-// ═══════════════════════════════════
-// URL PARAMS
-// ═══════════════════════════════════
-const params = new URLSearchParams(location.search);
-const PAGE    = params.get('page') || 'login';
-const REF     = params.get('ref') || '';
-const SESSION = params.get('session') || REF;
-const AMOUNT  = params.get('amount') || '500';
-const METHOD  = params.get('method') || 'bcel';
-const SERVICE = params.get('service') || 'Document Print';
-const SIZE    = params.get('size') || 'A4';
-const COLOR   = params.get('color') || 'B&W';
-const COPIES  = params.get('copies') || '1';
-
-// ═══════════════════════════════════
+// ════════════════════════════════
 // STATE
-// ═══════════════════════════════════
-let selectedFiles = [];
-let selectedPayMethod = METHOD;
-let orderData = null;
+// ════════════════════════════════
+const svcNames = { doc:'Document Print', copy:'Copy & Scan', id:'ID Photo', photo:'Photo Print' };
+const basePrices = { doc:500, copy:500, id:3000, photo:2000 };
 
-// ═══════════════════════════════════
-// INIT
-// ═══════════════════════════════════
-window.onload = async () => {
-  if (PAGE === 'login') await initLogin();
-  else if (PAGE === 'upload') initUpload();
-  else if (PAGE === 'pay') await initPay();
-  else showPage('loginPage');
+let state = {
+  svc: null,
+  svcName: '',
+  basePrice: 500,
+  size: 'A4',
+  color: 'B&W',
+  qty: 1,
+  total: 0,
+  files: [],
+  orderId: null,
+  payMethod: 'bcel',
 };
 
-// ═══════════════════════════════════
-// LOGIN
-// ═══════════════════════════════════
-async function initLogin() {
-  showPage('loginPage');
-  document.getElementById('loginLoading').style.display = 'block';
-  document.getElementById('loginReady').style.display = 'none';
+// ════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════
+function goStep(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('p' + n)?.classList.add('active');
+  window.scrollTo(0,0);
 
-  // Short delay for UX
-  await sleep(600);
-
-  try {
-    // Verify session exists
-    const res = await fetch(`${SERVER}/api/session/${REF}`);
-    if (!res.ok) throw new Error('Session not found');
-    const data = await res.json();
-
-    document.getElementById('loginRefDisp').textContent = '#'+REF;
-    document.getElementById('loginSessionVal').textContent = '#'+REF;
-    document.getElementById('loginLoading').style.display = 'none';
-    document.getElementById('loginReady').style.display = 'block';
-  } catch(e) {
-    // Demo mode — show anyway
-    document.getElementById('loginRefDisp').textContent = REF ? '#'+REF : '#DEMO';
-    document.getElementById('loginSessionVal').textContent = REF ? '#'+REF : '#DEMO';
-    document.getElementById('loginLoading').style.display = 'none';
-    document.getElementById('loginReady').style.display = 'block';
-    toast('Demo mode — server offline','err');
-  }
+  if(n === 4) populateSummary();
 }
 
-async function confirmLogin() {
-  const btn = document.getElementById('loginBtn');
-  btn.textContent = '⏳ UNLOCKING...';
-  btn.disabled = true;
+// ════════════════════════════════
+// STEP 1: SERVICE
+// ════════════════════════════════
+function selSvc(el, type, price) {
+  document.querySelectorAll('.svc-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  state.svc = type;
+  state.svcName = svcNames[type];
+  state.basePrice = price;
+  document.getElementById('nextBtn1').disabled = false;
+  document.getElementById('nextBtn1').style.opacity = '1';
 
-  try {
-    await fetch(`${SERVER}/api/login`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ sessionId: REF, kioskId: 'kiosk-01' })
-    });
-  } catch(e) {
-    // Demo mode continue
-  }
+  // Show/hide skip button for copy service
+  document.getElementById('skipUploadBtn').style.display = type === 'copy' ? 'block' : 'none';
 
-  showPage('successPage');
-  toast('✓ Kiosk unlocked!','ok');
+  calcTotal();
 }
 
-function cancelLogin() {
-  toast('Login cancelled');
-  window.history.back();
+// ════════════════════════════════
+// STEP 2: OPTIONS
+// ════════════════════════════════
+function selOpt(el, groupId) {
+  document.querySelectorAll(`#${groupId} .opt-chip`).forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  state.size = document.querySelector('#sizeOpts .opt-chip.sel')?.textContent || 'A4';
+  state.color = document.querySelector('#colorOpts .opt-chip.sel')?.textContent || 'B&W';
 }
 
-// ═══════════════════════════════════
-// UPLOAD
-// ═══════════════════════════════════
-function initUpload() {
-  showPage('uploadPage');
-  document.getElementById('uploadRefDisp').textContent = SESSION ? '#'+SESSION : '#---';
+function chgQty(d) {
+  state.qty = Math.max(1, Math.min(99, state.qty + d));
+  document.getElementById('qtyNum').textContent = state.qty;
+  calcTotal();
 }
 
+function calcTotal() {
+  state.size = document.querySelector('#sizeOpts .opt-chip.sel')?.textContent || 'A4';
+  state.color = document.querySelector('#colorOpts .opt-chip.sel')?.textContent || 'B&W';
+  const colorMult = state.color === 'COLOR' ? 2 : 1;
+  state.total = state.basePrice * state.qty * colorMult;
+  document.getElementById('totalAmt').textContent = state.total.toLocaleString() + ' LAK';
+}
+
+// ════════════════════════════════
+// STEP 3: UPLOAD
+// ════════════════════════════════
 function handleFiles(files) {
-  selectedFiles = Array.from(files);
-  renderFileList();
+  state.files = Array.from(files);
+  renderFiles();
 }
 
-function renderFileList() {
+function renderFiles() {
   const list = document.getElementById('fileList');
   const btn = document.getElementById('sendBtn');
-  const count = document.getElementById('fileCountVal');
-
-  if (selectedFiles.length === 0) {
+  if(state.files.length === 0) {
     list.innerHTML = '';
     btn.disabled = true;
-    btn.style.opacity = '0.4';
-    count.textContent = '0';
+    btn.style.opacity = '0.35';
     return;
   }
-
-  list.innerHTML = selectedFiles.map((f,i) => `
+  list.innerHTML = state.files.map((f,i) => `
     <div class="file-item">
-      <div class="file-ico">${getFileIcon(f.name)}</div>
+      <div class="file-ico">${fileIcon(f.name)}</div>
       <div class="file-info">
         <div class="file-name">${f.name}</div>
-        <div class="file-size">${formatSize(f.size)}</div>
+        <div class="file-size">${fmtSize(f.size)}</div>
       </div>
       <button class="file-del" onclick="removeFile(${i})">✕</button>
     </div>
   `).join('');
-
   btn.disabled = false;
   btn.style.opacity = '1';
-  count.textContent = selectedFiles.length;
 }
 
 function removeFile(i) {
-  selectedFiles.splice(i, 1);
-  renderFileList();
+  state.files.splice(i,1);
+  renderFiles();
 }
 
 async function sendFiles() {
-  if (selectedFiles.length === 0) return;
-
+  if(state.files.length === 0) return;
   const btn = document.getElementById('sendBtn');
-  const progress = document.getElementById('uploadProgress');
-  const errCard = document.getElementById('uploadError');
-  const statusVal = document.getElementById('fileStatusVal');
-
   btn.disabled = true;
-  btn.textContent = '⏳ SENDING...';
-  progress.style.display = 'block';
-  errCard.style.display = 'none';
+  btn.textContent = '⏳ UPLOADING...';
+  document.getElementById('progWrap').style.display = 'block';
 
-  // Simulate progress
   let pct = 0;
-  const progInterval = setInterval(() => {
-    pct = Math.min(pct + Math.random() * 15, 90);
-    document.getElementById('progFill').style.width = pct + '%';
-    document.getElementById('progPct').textContent = Math.floor(pct) + '%';
+  const iv = setInterval(() => {
+    pct = Math.min(pct + Math.random()*15, 90);
+    document.getElementById('progFill').style.width = pct+'%';
+    document.getElementById('progPct').textContent = Math.floor(pct)+'%';
   }, 200);
 
   try {
-    const formData = new FormData();
-    selectedFiles.forEach(f => formData.append('files', f));
-    formData.append('sessionId', SESSION);
-    formData.append('kioskId', 'kiosk-01');
+    const fd = new FormData();
+    state.files.forEach(f => fd.append('files', f));
+    fd.append('kioskId', KIOSK_ID);
 
-    const res = await fetch(`${SERVER}/api/upload`, {
-      method: 'POST',
-      body: formData
-    });
-
-    clearInterval(progInterval);
+    const res = await fetch(`${SERVER}/api/upload`, { method:'POST', body:fd });
+    clearInterval(iv);
     document.getElementById('progFill').style.width = '100%';
     document.getElementById('progPct').textContent = '100%';
-
-    if (!res.ok) throw new Error('Upload failed');
-
     await sleep(400);
-    statusVal.textContent = 'SENT ✓';
-    showUploadDone();
-    toast('✓ File sent to kiosk!','ok');
+    onUploadDone();
+    toast('✓ File uploaded!','ok');
   } catch(e) {
-    clearInterval(progInterval);
-    progress.style.display = 'none';
-    btn.disabled = false;
-    btn.textContent = 'SEND TO KIOSK →';
-    btn.style.opacity = '1';
-
+    clearInterval(iv);
     // Demo mode
+    document.getElementById('progFill').style.width = '100%';
     await sleep(400);
-    statusVal.textContent = 'SENT ✓';
-    showUploadDone();
-    toast('File sent (demo mode)','ok');
+    onUploadDone();
+    toast('✓ File ready (demo)','ok');
   }
 }
 
-function showUploadDone() {
+function onUploadDone() {
   document.getElementById('uploadZone').style.display = 'none';
   document.getElementById('fileList').style.display = 'none';
-  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('progWrap').style.display = 'none';
   document.getElementById('sendBtn').style.display = 'none';
-  document.querySelector('#uploadPage .btn-ghost').style.display = 'none';
-  document.querySelector('.info-grid').style.display = 'none';
   document.getElementById('uploadDone').style.display = 'block';
+
+  // Auto proceed after 1.5s
+  setTimeout(() => goStep(4), 1500);
 }
 
-function resetUpload() {
-  selectedFiles = [];
-  document.getElementById('uploadZone').style.display = 'block';
-  document.getElementById('fileList').style.display = 'block';
-  document.getElementById('sendBtn').style.display = 'block';
-  document.getElementById('sendBtn').textContent = 'SEND TO KIOSK →';
-  document.querySelector('#uploadPage .btn-ghost').style.display = 'block';
-  document.querySelector('.info-grid').style.display = 'grid';
-  document.getElementById('uploadDone').style.display = 'none';
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('fileInput').value = '';
-  renderFileList();
+// ════════════════════════════════
+// STEP 4: PAYMENT
+// ════════════════════════════════
+function populateSummary() {
+  document.getElementById('payAmtDisp').textContent = state.total.toLocaleString() + ' LAK';
+  document.getElementById('sumSvc').textContent = state.svcName;
+  document.getElementById('sumSize').textContent = state.size;
+  document.getElementById('sumColor').textContent = state.color;
+  document.getElementById('sumCopies').textContent = state.qty;
+  document.getElementById('sumTotal').textContent = state.total.toLocaleString() + ' LAK';
+
+  // Create order
+  createOrder();
 }
 
-// ═══════════════════════════════════
-// PAYMENT
-// ═══════════════════════════════════
-async function initPay() {
-  showPage('payPage');
-  document.getElementById('payLoading').style.display = 'block';
-  document.getElementById('payReady').style.display = 'none';
-
-  await sleep(500);
-
-  // Set pre-selected method from QR params
-  if (METHOD === 'onepay') {
-    document.getElementById('bcelBtn').classList.remove('sel');
-    document.getElementById('onepayBtn').classList.add('sel');
+async function createOrder() {
+  try {
+    const res = await fetch(`${SERVER}/api/order/create`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        kioskId: KIOSK_ID,
+        service: state.svcName,
+        size: state.size,
+        color: state.color,
+        copies: state.qty,
+        amount: state.total
+      })
+    });
+    const data = await res.json();
+    state.orderId = data.orderId;
+    document.getElementById('payRefDisp').textContent = 'REF: #' + data.orderId;
+  } catch(e) {
+    state.orderId = 'PD' + Math.random().toString(36).substr(2,6).toUpperCase();
+    document.getElementById('payRefDisp').textContent = 'REF: #' + state.orderId;
   }
-
-  // Fill order details
-  document.getElementById('payAmtVal').textContent = parseInt(AMOUNT).toLocaleString() + ' LAK';
-  document.getElementById('payRefVal').textContent = 'REF: #' + REF;
-  document.getElementById('osSvc').textContent = SERVICE;
-  document.getElementById('osSize').textContent = SIZE;
-  document.getElementById('osColor').textContent = COLOR;
-  document.getElementById('osCopies').textContent = COPIES;
-  document.getElementById('osTotal').textContent = parseInt(AMOUNT).toLocaleString() + ' LAK';
-
-  document.getElementById('payLoading').style.display = 'none';
-  document.getElementById('payReady').style.display = 'block';
 }
 
 function selPay(btn, method) {
-  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.pay-card').forEach(c => c.classList.remove('sel'));
   btn.classList.add('sel');
-  selectedPayMethod = method;
+  state.payMethod = method;
 }
 
 async function confirmPayment() {
   const btn = document.getElementById('payBtn');
-  const errCard = document.getElementById('payError');
-
   btn.textContent = '⏳ PROCESSING...';
   btn.disabled = true;
-  errCard.style.display = 'none';
 
   try {
-    const res = await fetch(`${SERVER}/api/payment/confirm`, {
+    await fetch(`${SERVER}/api/payment/confirm`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        orderId: REF,
-        method: selectedPayMethod,
-        kioskId: 'kiosk-01'
+        orderId: state.orderId,
+        method: state.payMethod,
+        kioskId: KIOSK_ID
       })
     });
-    if (!res.ok) throw new Error('Payment failed');
-  } catch(e) {
-    // Demo mode continue
-  }
+  } catch(e) {}
 
-  await sleep(600);
+  await sleep(800);
+  showSuccess();
+}
 
-  // Show success
-  document.getElementById('payReady').style.display = 'none';
-  document.getElementById('payDone').style.display = 'block';
+// ════════════════════════════════
+// STEP 5: SUCCESS
+// ════════════════════════════════
+function showSuccess() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('successPage').classList.add('active');
+  window.scrollTo(0,0);
+
+  const now = new Date();
+  document.getElementById('receiptCard').innerHTML = `
+    <div class="receipt-row"><span>Ref</span><span>#${state.orderId}</span></div>
+    <div class="receipt-row"><span>Service</span><span>${state.svcName}</span></div>
+    <div class="receipt-row"><span>Size</span><span>${state.size}</span></div>
+    <div class="receipt-row"><span>Color</span><span>${state.color}</span></div>
+    <div class="receipt-row"><span>Copies</span><span>${state.qty}</span></div>
+    <div class="receipt-row"><span>Payment</span><span>${state.payMethod.toUpperCase()}</span></div>
+    <div class="receipt-row"><span>Time</span><span>${now.toLocaleTimeString()}</span></div>
+    <div class="receipt-row total"><span>TOTAL</span><span>${state.total.toLocaleString()} LAK</span></div>
+  `;
+
   toast('✓ Payment confirmed!','ok');
 }
 
-function cancelPayment() {
-  toast('Payment cancelled');
-  window.history.back();
+function resetAll() {
+  state = { svc:null, svcName:'', basePrice:500, size:'A4', color:'B&W', qty:1, total:0, files:[], orderId:null, payMethod:'bcel' };
+  document.querySelectorAll('.svc-card').forEach(c => c.classList.remove('sel'));
+  document.getElementById('nextBtn1').disabled = true;
+  document.getElementById('nextBtn1').style.opacity = '0.35';
+  document.getElementById('qtyNum').textContent = '1';
+  document.getElementById('uploadZone').style.display = 'block';
+  document.getElementById('fileList').style.display = 'block';
+  document.getElementById('sendBtn').style.display = 'block';
+  document.getElementById('sendBtn').textContent = 'SEND TO PRINTER →';
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('sendBtn').style.opacity = '0.35';
+  document.getElementById('uploadDone').style.display = 'none';
+  document.getElementById('progWrap').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.querySelectorAll('.pay-card').forEach(c => c.classList.remove('sel'));
+  document.getElementById('bcelBtn').classList.add('sel');
+  goStep(1);
 }
 
-// ═══════════════════════════════════
+// ════════════════════════════════
 // UTILS
-// ═══════════════════════════════════
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
-
-function getFileIcon(name) {
+// ════════════════════════════════
+function fileIcon(name) {
   const ext = name.split('.').pop().toLowerCase();
-  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
-  if (ext === 'pdf') return '📄';
-  if (['doc','docx'].includes(ext)) return '📝';
+  if(['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
+  if(ext === 'pdf') return '📄';
+  if(['doc','docx'].includes(ext)) return '📝';
   return '📎';
 }
-
-function formatSize(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
-  return (b/1024/1024).toFixed(1) + ' MB';
+function fmtSize(b) {
+  if(b < 1024) return b+'B';
+  if(b < 1024*1024) return (b/1024).toFixed(1)+'KB';
+  return (b/1024/1024).toFixed(1)+'MB';
 }
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 function toast(msg, type='') {
   const el = document.getElementById('toastEl');
   el.textContent = msg;
-  el.className = 'toast show' + (type ? ' '+type : '');
-  setTimeout(() => el.classList.remove('show'), 3000);
+  el.className = 'toast show'+(type?' '+type:'');
+  setTimeout(()=>el.classList.remove('show'), 3000);
 }
 </script>
 </body>

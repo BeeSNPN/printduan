@@ -14,7 +14,7 @@ const FileSync = require('lowdb/adapters/FileSync');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // ── DATABASE ──
 const adapter = new FileSync(path.join(__dirname, 'db.json'));
